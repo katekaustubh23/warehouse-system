@@ -1,0 +1,29 @@
+{
+  "groups": [
+    {
+      "name": "jwt",
+      "type": "com.auth.token.JwtConfigProperties",
+      "sourceType": "com.auth.token.JwtConfigProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "jwt.access-token-expiry-ms",
+      "type": "java.lang.Long",
+      "sourceType": "com.auth.token.JwtConfigProperties",
+      "defaultValue": 0
+    },
+    {
+      "name": "jwt.refresh-token-expiry-ms",
+      "type": "java.lang.Long",
+      "sourceType": "com.auth.token.JwtConfigProperties",
+      "defaultValue": 0
+    },
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "sourceType": "com.auth.token.JwtConfigProperties"
+    }
+  ],
+  "hints": []
+}
