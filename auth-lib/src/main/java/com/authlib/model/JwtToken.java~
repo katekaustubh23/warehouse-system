@@ -1,4 +1,0 @@
-package com.authlib.model;
-
-public class JwtToken {
-}
