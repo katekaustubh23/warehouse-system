@@ -1,0 +1,29 @@
+package com.authlib.config;
+
+import com.authlib.filter.JwtAuthenticationFilter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+
+@Configuration
+@ConditionalOnWebApplication
+public class AuthLibAutoConfiguration {
+
+    @Bean
+    public JwtAuthenticationFilter internalAuthFilter() {
+        return new JwtAuthenticationFilter();
+    }
+
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> internalAuthFilterRegistration(JwtAuthenticationFilter internalAuthFilter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registrationBean =
+                new FilterRegistrationBean<>();
+        registrationBean.setFilter(internalAuthFilter);
+        registrationBean.addUrlPatterns("/*");  // intercept all requests
+        registrationBean.setOrder(1);           // priority
+        return registrationBean;
+    }
+}
