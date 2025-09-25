@@ -36,7 +36,7 @@ public class OrderController {
 	}
 
 	@GetMapping("/{id}")
-	public ApiResponse<Map<String, Object>> getOrder(@PathVariable Long id) {
+	public ApiResponse<Map<String, Object>> getOrder(@PathVariable("id") Long id) {
 		return  ApiResponse.success(MessageString.FETCHED_DATA.toString(), orderService.getOrder(id), HttpStatus.OK.value());
 	}
 

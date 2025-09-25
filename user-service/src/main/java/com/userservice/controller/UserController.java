@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -25,17 +26,17 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserResponse> getAllUsers(@RequestParam Role role) throws NoSuchFieldException {
+    public List<UserResponse> getAllUsers(@RequestParam("role") Role role) throws NoSuchFieldException {
         return userService.getAllUsers(role);
     }
 
     @GetMapping("/{id}")
-    public UserResponse getUser(@PathVariable Long id, @RequestParam Role role) {
+    public UserResponse getUser(@PathVariable("id") Long id, @RequestParam("role") Role role) {
         return userService.getUserById(id, role);
     }
 
     @GetMapping("/by-username/{username}")
-    public UserResponseWithPassword getUserByUsername(@RequestHeader(value = "X-Internal-Secret", required = false) String secret, @PathVariable String username, @RequestParam Role role) {
+    public UserResponseWithPassword getUserByUsername(@RequestHeader(value = "X-Internal-Secret", required = false) String secret, @PathVariable("username") String username, @RequestParam("role") Role role) {
 
         if (secret == null || !secret.equals(internalSecret)) {
             throw new AccessDeniedException("Access denied");
@@ -45,12 +46,12 @@ public class UserController {
 
 
     @PostMapping
-    public UserResponse createUser(@RequestBody User user, @RequestParam Role role) throws NoSuchFieldException {
+    public UserResponse createUser(@RequestBody User user, @RequestParam("role") Role role) throws NoSuchFieldException {
         return userService.createUser(user, role);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id, @RequestParam Role role) throws NoSuchFieldException {
+    public void deleteUser(@PathVariable("id") Long id, @RequestParam("role") Role role) throws NoSuchFieldException {
         userService.deleteUser(id, role);
     }
 }

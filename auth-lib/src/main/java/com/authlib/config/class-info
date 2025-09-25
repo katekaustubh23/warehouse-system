@@ -1,0 +1,45 @@
+Filter interface in Java / Spring
+
+The Filter interface is part of Servlet API (javax.servlet.Filter or jakarta.servlet.Filter).
+
+It allows you to intercept HTTP requests and responses before they reach a servlet or after they leave it.
+
+Key Points:
+
+Purpose
+Filters are used for cross-cutting concerns like:
+
+Authentication/authorization ✅
+
+Logging requests/responses ✅
+
+Compression / encryption ✅
+
+Adding headers ✅
+
+Core Methods
+
+public interface Filter {
+    void init(FilterConfig filterConfig) throws ServletException; // called once on startup
+    void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException; // called for every request
+    void destroy(); // cleanup when server shuts down
+}
+
+
+doFilter() → main method: you can inspect or modify request/response, then pass control using:
+
+chain.doFilter(request, response);
+
+**How it fits in Spring Security**
+
+OncePerRequestFilter and GenericFilterBean in Spring implement Filter.
+
+Spring Security builds a filter chain: all security checks (JWT, CSRF, authentication) are filters.
+
+Your JwtAuthenticationFilter is essentially a custom Filter that plugs into Spring’s filter chain.
+
+✅ Summary:
+A Filter is like a “gatekeeper” for HTTP requests/responses. It can intercept, check, modify, or block requests
+before
+they reach your controllers or servlets.

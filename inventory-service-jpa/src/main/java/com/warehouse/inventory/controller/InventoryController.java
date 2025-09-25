@@ -33,15 +33,15 @@ public class InventoryController {
 		this.inventoryFactory = inventoryFactory;
 	}
 
-	@GetMapping()
-	public ApiResponse<List<Map<String, Object>>> getAll(@PathVariable String version) {
+	@GetMapping
+	public ApiResponse<List<Map<String, Object>>> getAll(@PathVariable("version") String version) {
 		List<Inventory> list = inventoryDao.findAll();
 		List<Map<String, Object>> result = list.stream().map(inventoryFactory.resolved(version)::format).toList();
 		return ApiResponse.success(MessageString.FETCH_ALL_DATA.getDisplayName(), result, HttpStatus.OK.value());
 	}
 
 	@GetMapping("/{id}")
-	public ApiResponse<Map<String, Object>> getById(@PathVariable int id, @PathVariable String version) {
+	public ApiResponse<Map<String, Object>> getById(@PathVariable("id") int id, @PathVariable("version") String version) {
 		Inventory inv = inventoryDao.findById(id);
 		if (inv == null) {
 			throw new ResourceNotFoundException("Inventory not found with ID: " + id);
@@ -52,14 +52,14 @@ public class InventoryController {
 	}
 
 	@PostMapping
-	public ApiResponse<Map<String, Object>> create(@RequestBody Inventory inv, @PathVariable String version) {
+	public ApiResponse<Map<String, Object>> create(@RequestBody Inventory inv, @PathVariable("version") String version) {
 		Inventory invSaved = inventoryDao.save(inv);
 		Map<String, Object> result = inventoryFactory.resolved(version).format(invSaved);
 		return ApiResponse.success(MessageString.CREATED_DATA.getDisplayName(), result, HttpStatus.CREATED.value());
 	}
 
 	@PutMapping("/{id}")
-	public ApiResponse<String> update(@PathVariable UUID id, @RequestBody Inventory inv) {
+	public ApiResponse<String> update(@PathVariable("id") UUID id, @RequestBody Inventory inv) {
 		inv.setId(id);
 		inventoryDao.update(inv);
 		return ApiResponse.success(MessageString.UPDATED_DATA.getDisplayName(), String.valueOf(id),
@@ -67,7 +67,7 @@ public class InventoryController {
 	}
 
 	@DeleteMapping("/{id}")
-	public ApiResponse<String> delete(@PathVariable int id) {
+	public ApiResponse<String> delete(@PathVariable("id") int id) {
 		inventoryDao.delete(id);
 		return ApiResponse.success(MessageString.FETCHED_DATA.getDisplayName(), String.valueOf(id),
 				HttpStatus.OK.value());

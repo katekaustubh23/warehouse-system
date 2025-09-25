@@ -2,10 +2,10 @@ package com.auth.token;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import com.auth.token.JwtConfigProperties;
 import java.util.Date;
 import java.util.List;
 
@@ -15,13 +15,10 @@ public class JwtTokenService {
     private final long accessTokenExpiryMs;
     private final long refreshTokenExpiryMs;
 
-    public JwtTokenService(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-token.expiry-ms}") long accessTokenExpiryMs,
-            @Value("${jwt.refresh-token.expiry-ms}") long refreshTokenExpiryMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.accessTokenExpiryMs = accessTokenExpiryMs;
-        this.refreshTokenExpiryMs = refreshTokenExpiryMs;
+    public JwtTokenService(JwtConfigProperties jwtConfigProperties) {
+        this.key = Keys.hmacShaKeyFor(jwtConfigProperties.getSecret().getBytes());
+        this.accessTokenExpiryMs = jwtConfigProperties.getAccessTokenExpiryMs();
+        this.refreshTokenExpiryMs = jwtConfigProperties.getRefreshTokenExpiryMs();
     }
 
     /**

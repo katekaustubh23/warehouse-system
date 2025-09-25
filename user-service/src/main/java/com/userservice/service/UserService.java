@@ -5,6 +5,7 @@ import com.userservice.dto.UserResponse;
 import com.userservice.dto.UserResponseWithPassword;
 import com.userservice.model.User;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public interface UserService {

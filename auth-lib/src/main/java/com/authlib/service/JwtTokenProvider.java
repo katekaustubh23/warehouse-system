@@ -29,6 +29,7 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
+    /*Not in use*/
     public String generateToken(String username) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenExpiryMs);
@@ -50,6 +51,8 @@ public class JwtTokenProvider {
         }
     }
 
+
+    /*Not in use*/
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody();

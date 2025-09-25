@@ -1,8 +1,6 @@
 package com.auth.filter;
 
-import com.auth.client.UserServiceClient;
-import com.auth.session.LoginRequest;
-import com.auth.session.LoginResponse;
+
 import com.auth.token.JwtTokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -26,6 +24,17 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/*
+ * Custom authentication filter for handling /login requests.
+ * - Extends AbstractAuthenticationProcessingFilter to leverage Spring Security login flow.
+ * - Intercepts POST requests to the login URL.
+ * - attemptAuthentication(): reads username/password from JSON and authenticates via AuthenticationManager.
+ * - successfulAuthentication(): generates JWT access and refresh tokens and returns them as JSON.
+ * - unsuccessfulAuthentication(): returns 401 error if credentials are invalid.
+ *
+ * Purpose:
+ * This filter replaces default form login and provides JWT-based authentication.
+ */
 
 public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 

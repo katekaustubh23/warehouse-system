@@ -22,43 +22,4 @@ public class Warehouse {
     @NotNull @Min(0)
     private Integer usedCapacity;
 
-//    public Long getId() {
-//        return id;
-//    }
-//
-//    public void setId(Long id) {
-//        this.id = id;
-//    }
-//
-//    public String getName() {
-//        return name;
-//    }
-//
-//    public void setName(String name) {
-//        this.name = name;
-//    }
-//
-//    public String getAddress() {
-//        return address;
-//    }
-//
-//    public void setAddress(String address) {
-//        this.address = address;
-//    }
-//
-//    public Integer getMaxCapacity() {
-//        return maxCapacity;
-//    }
-//
-//    public void setMaxCapacity(Integer maxCapacity) {
-//        this.maxCapacity = maxCapacity;
-//    }
-//
-//    public Integer getUsedCapacity() {
-//        return usedCapacity;
-//    }
-//
-//    public void setUsedCapacity(Integer usedCapacity) {
-//        this.usedCapacity = usedCapacity;
-//    }
 }

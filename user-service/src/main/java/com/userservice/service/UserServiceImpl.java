@@ -3,14 +3,17 @@ package com.userservice.service;
 import com.userservice.constant.Role;
 import com.userservice.dto.UserResponse;
 import com.userservice.dto.UserResponseWithPassword;
+import com.userservice.exception.SQLTypeException;
 import com.userservice.exception.UserNotFoundException;
 import com.userservice.model.User;
 import com.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,10 +44,11 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserResponse createUser(User user, Role requestorRole) throws AccessDeniedException {
+    public UserResponse createUser(User user, Role requestorRole) throws AccessDeniedException{
         checkPermission(requestorRole, Role.ADMIN);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         // ... validate, encode password, etc.
+
         return toResponse(userRepository.save(user));
     }
 

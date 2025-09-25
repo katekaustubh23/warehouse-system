@@ -26,6 +26,7 @@ public class InventoryDaoImpl implements InventoryDao{
 
     @Override
     public List<Inventory> findAll() {
+        System.out.println("************************* " + java.util.TimeZone.getDefault().getID());
         return jdbcTemplate.query(
             queries.getProperty("inventory.getAll"),
             new BeanPropertyRowMapper<>(Inventory.class)

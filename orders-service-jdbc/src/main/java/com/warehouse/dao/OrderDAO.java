@@ -101,7 +101,7 @@ public class OrderDAO {
 	 */
 
 	public void updateStatus(OrderStatusHandler statusHandler, Long orderId) {
-		jdbcTemplate.update("UPDATE order_schema.orders SET status = ? WHERE id = ?",
+		jdbcTemplate.update("UPDATE warehouse_order.orders SET status = ? WHERE id = ?",
 				statusHandler.getHandledStatus().name(), orderId);
 
 	}

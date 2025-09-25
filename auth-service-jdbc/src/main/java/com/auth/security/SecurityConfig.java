@@ -87,12 +87,12 @@ public class SecurityConfig {
                                                    AuthenticationManager authManager,
                                                    JwtTokenService jwtTokenService) throws Exception {
 
-        LoginAuthenticationFilter jwtFilter = new LoginAuthenticationFilter("/api/v1/auth/login", authManager, jwtTokenService);
+        LoginAuthenticationFilter jwtFilter = new LoginAuthenticationFilter("/v1/auth/login", authManager, jwtTokenService);
 
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/login")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v1/auth/login")).permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(provider)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

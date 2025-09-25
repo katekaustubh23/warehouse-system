@@ -3,27 +3,27 @@
 <properties>
     <!-- INVENTORY QUERIES -->
     <entry key="inventory.insert">
-        INSERT INTO inventory (product_id, product_name, quantity, location_id, category, supplier_id, created_at, updated_at)
+        INSERT INTO warehouse_inventory.inventory (product_id, product_name, quantity, location_id, category, supplier_id, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
         RETURNING *;
     </entry>
 
     <entry key="inventory.update">
-        UPDATE inventory
+        UPDATE warehouse_inventory.inventory
         SET product_name = ?, quantity = ?, location_id = ?, category = ?, supplier_id = ?, updated_at = NOW()
         WHERE product_id = ?;
     </entry>
 
     <entry key="inventory.delete">
-        DELETE FROM inventory WHERE product_id = ?;
+        DELETE FROM warehouse_inventory.inventory WHERE product_id = ?;
     </entry>
 
     <entry key="inventory.getById">
-        SELECT * FROM inventory WHERE product_id = ?;
+        SELECT * FROM warehouse_inventory.inventory WHERE product_id = ?;
     </entry>
 
     <entry key="inventory.getAll">
-        SELECT * FROM inventory ORDER BY updated_at DESC;
+        SELECT * FROM warehouse_inventory.inventory ORDER BY updated_at DESC;
     </entry>
 
 </properties>

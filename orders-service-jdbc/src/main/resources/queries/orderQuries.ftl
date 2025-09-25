@@ -9,7 +9,7 @@ SELECT
     o.status,
     o.order_date,
     o.delivery_address
-FROM order_schema.orders o
+FROM warehouse_order.orders o
 <#if orderId??>
 WHERE o.id = :orderId
 </#if>

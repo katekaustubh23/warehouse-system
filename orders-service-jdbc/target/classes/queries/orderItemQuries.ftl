@@ -9,7 +9,7 @@ SELECT
     product_id,
     quantity,
     warehouse_id
-FROM order_schema.order_items o
+FROM warehouse_order.order_items o
 <#if orderId??>
 WHERE o.order_id = :orderId
 </#if>
