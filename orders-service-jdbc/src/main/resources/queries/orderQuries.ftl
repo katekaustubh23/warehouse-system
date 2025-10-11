@@ -4,7 +4,7 @@
 }
 META*/
 SELECT 
-    o.id AS order_id,
+    o.id,
     o.user_id,
     o.status,
     o.order_date,

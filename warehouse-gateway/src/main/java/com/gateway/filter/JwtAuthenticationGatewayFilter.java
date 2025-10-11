@@ -1,8 +1,8 @@
 package com.gateway.filter;
 
+import com.authlib.config.JwtConfigProperties;
 import com.authlib.service.JwtTokenProvider;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -10,27 +10,20 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 
 @Component
 public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
     private final JwtTokenProvider tokenProvider;
 
-    // read from application.yml
-    @Value("${internal.secret}")
     private String internalSecret;
 
-    public JwtAuthenticationGatewayFilter(JwtTokenProvider tokenProvider) {
+    public JwtAuthenticationGatewayFilter(JwtTokenProvider tokenProvider, JwtConfigProperties configProperties) {
         this.tokenProvider = tokenProvider;
+        this.internalSecret = configProperties.getInternalSecret();
     }
 
     @Override

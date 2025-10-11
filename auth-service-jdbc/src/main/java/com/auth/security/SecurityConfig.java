@@ -93,6 +93,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(new AntPathRequestMatcher("/v1/auth/login")).permitAll()
+                        .requestMatchers("/v1/register/**").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(provider)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

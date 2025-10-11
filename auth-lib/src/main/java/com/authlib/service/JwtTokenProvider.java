@@ -1,6 +1,7 @@
 package com.authlib.service;
 
 
+import com.authlib.config.JwtConfigProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -16,11 +17,13 @@ import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
-    @Value("${jwt.secret}")
     private String jwtSecret;
-
-    @Value("${jwt.access-token.expiry-ms}")
     private long accessTokenExpiryMs;
+
+    public JwtTokenProvider(JwtConfigProperties jwtConfigProperties) {
+        this.jwtSecret = jwtConfigProperties.getSecret();
+        this.accessTokenExpiryMs = jwtConfigProperties.getAccessTokenExpiryMs();
+    }
 
     private Key key;
 

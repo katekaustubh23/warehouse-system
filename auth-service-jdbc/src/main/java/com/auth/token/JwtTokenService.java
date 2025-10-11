@@ -5,15 +5,15 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import com.auth.token.JwtConfigProperties;
+
 import java.util.Date;
 import java.util.List;
 
 @Service
 public class JwtTokenService {
     private final Key key;
-    private final long accessTokenExpiryMs;
-    private final long refreshTokenExpiryMs;
+    private final String accessTokenExpiryMs;
+    private final String refreshTokenExpiryMs;
 
     public JwtTokenService(JwtConfigProperties jwtConfigProperties) {
         this.key = Keys.hmacShaKeyFor(jwtConfigProperties.getSecret().getBytes());
@@ -32,7 +32,7 @@ public class JwtTokenService {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("roles", roles)
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiryMs))
+                .setExpiration(new Date(System.currentTimeMillis() + Long.valueOf(accessTokenExpiryMs)))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -46,7 +46,7 @@ public class JwtTokenService {
     public String generateRefreshToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiryMs))
+                .setExpiration(new Date(System.currentTimeMillis() + Long.valueOf(refreshTokenExpiryMs)))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

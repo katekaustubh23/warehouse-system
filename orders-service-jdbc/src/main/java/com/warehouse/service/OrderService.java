@@ -11,7 +11,7 @@ public interface OrderService {
 
 	Map<String, Object> getOrder(Long id);
 
-	List<Map<String, Object>> listOrders(int page, int size);
+	List<Map<String, Object>> listOrders(Integer page, Integer size);
 
 	void updateStatus(Long id, String status);
 

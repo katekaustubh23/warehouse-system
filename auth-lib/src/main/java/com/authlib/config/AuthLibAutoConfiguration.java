@@ -18,8 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class AuthLibAutoConfiguration {
 
     @Bean
-    public JwtAuthenticationFilter internalAuthFilter() {
-        return new JwtAuthenticationFilter();
+    public JwtAuthenticationFilter internalAuthFilter(JwtConfigProperties jwtConfigProperties) {
+        return new JwtAuthenticationFilter(jwtConfigProperties);
     }
 
     // Defines the application's SecurityFilterChain bean.

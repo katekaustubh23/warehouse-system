@@ -55,7 +55,7 @@ public class GenericJdbcRepository {
         String sql = buildInsertSQL(tableName, columnValues.keySet());
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        namedJdbcTemplate.update(sql, new MapSqlParameterSource(columnValues), keyHolder);
+        namedJdbcTemplate.update(sql, new MapSqlParameterSource(columnValues), keyHolder, new String[] {"id"});
 
         logDuration("Insert", tableName, start);
         return Optional.ofNullable(keyHolder.getKey()).map(Number::longValue);

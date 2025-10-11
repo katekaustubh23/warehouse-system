@@ -9,12 +9,17 @@
   "properties": [
     {
       "name": "jwt.access-token-expiry-ms",
-      "type": "java.lang.Long",
+      "type": "java.lang.String",
+      "sourceType": "com.auth.token.JwtConfigProperties"
+    },
+    {
+      "name": "jwt.internal-secret",
+      "type": "java.lang.String",
       "sourceType": "com.auth.token.JwtConfigProperties"
     },
     {
       "name": "jwt.refresh-token-expiry-ms",
-      "type": "java.lang.Long",
+      "type": "java.lang.String",
       "sourceType": "com.auth.token.JwtConfigProperties"
     },
     {

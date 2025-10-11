@@ -1,2 +1,4 @@
 .env
 .idea/
+vault/
+vault-config/

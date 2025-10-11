@@ -9,7 +9,8 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import java.util.TimeZone;
 
 @EnableAspectJAutoProxy
-@SpringBootApplication(exclude = { UserDetailsServiceAutoConfiguration.class },scanBasePackages = {"com.warehouse", "com.logging", "com.authlib"})
+@SpringBootApplication(exclude = { UserDetailsServiceAutoConfiguration.class },
+        scanBasePackages = {"com.warehouse", "com.logging", "com.authlib","com.common"})
 public class OrderApplication {
     public static void main(String[] args) {
         SpringApplication.run(OrderApplication.class, args);

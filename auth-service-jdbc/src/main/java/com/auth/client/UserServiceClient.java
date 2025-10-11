@@ -1,10 +1,8 @@
 package com.auth.client;
 
+import com.auth.session.UserRegistration;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -13,4 +11,7 @@ public interface UserServiceClient {
 
     @GetMapping("/by-username/{username}")
     Map<String, Object> getUserByUsername(@PathVariable("username") String username, @RequestParam("role") String role);
+
+    @PostMapping
+    Map<String, Object> createUser(@RequestBody Map<String, Object> userRegistration, @RequestParam("role") String role);
 }
