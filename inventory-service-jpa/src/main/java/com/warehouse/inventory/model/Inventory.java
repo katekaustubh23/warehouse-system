@@ -16,7 +16,8 @@ public class Inventory {
     private UUID categoryId;
     private int quantity;
     private String location;
-    private UUID warehouseId;
+    private Long productId;
+    private Long warehouseId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

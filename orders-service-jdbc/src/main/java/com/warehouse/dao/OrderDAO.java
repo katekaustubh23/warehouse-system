@@ -57,7 +57,7 @@ public class OrderDAO {
 		return order.get(0);
 	}
 
-	public List<Map<String, Object>> fetchListOrder(int page, int size) {
+	public List<Map<String, Object>> fetchListOrder(Integer page, Integer size) {
 		logger.info("page number ={} and size ={} for the order ", page, size);
 		Map<String, Object> params = new LinkedHashMap<>();
 		params.put("offset", (page - 1) * size);

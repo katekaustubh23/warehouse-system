@@ -1,5 +1,6 @@
 package com.authlib.filter;
 
+import com.authlib.config.JwtConfigProperties;
 import com.authlib.service.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,9 +22,11 @@ import java.util.List;
 //@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Value("${internal.secret}")
     private String internalSecret;
 
+    public JwtAuthenticationFilter(JwtConfigProperties jwtConfigProperties) {
+        this.internalSecret = jwtConfigProperties.getInternalSecret();
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

@@ -68,6 +68,12 @@ public class UserServiceImpl implements UserService{
                 .password(user.getPassword()).build();
     }
 
+    @Override
+    public Boolean userExits(Role role) {
+        checkPermission(role, Role.ADMIN);
+        return userRepository.findFirstBy().isEmpty();
+    }
+
     private void checkPermission(Role requestorRole, Role... allowedRoles) throws AccessDeniedException {
         for (Role allowed : allowedRoles) {
             if (requestorRole == allowed) return;

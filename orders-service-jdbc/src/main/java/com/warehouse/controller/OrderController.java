@@ -3,6 +3,8 @@ package com.warehouse.controller;
 import java.util.List;
 import java.util.Map;
 
+import com.common.response.ApiResponse;
+import com.common.response.ResponseUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.warehouse.constant.MessageString;
 import com.warehouse.model.Orders;
-import com.warehouse.response.ApiResponse;
+import com.warehouse.response.ApiResponseOld;
 import com.warehouse.service.OrderService;
 
 @RestController
@@ -24,31 +26,39 @@ import com.warehouse.service.OrderService;
 public class OrderController {
 
 	private final OrderService orderService;
+	private final ResponseUtils responseUtils;
 
-	public OrderController(OrderService orderService) {
+	public OrderController(OrderService orderService,ResponseUtils responseUtils) {
 		this.orderService = orderService;
+		this.responseUtils = responseUtils;
 	}
 
 	@PostMapping
-	public ApiResponse<Long> placeOrder(@RequestBody Orders order) {
+	public ResponseEntity<ApiResponse<Long>> placeOrder(@RequestBody Orders order) {
 		Long id = orderService.placeOrder(order);
-		return ApiResponse.success(MessageString.CREATED_DATA.toString(), id, HttpStatus.CREATED.value());
+		return responseUtils.buildSuccess(id, MessageString.CREATED_DATA.toString(), HttpStatus.CREATED);
 	}
 
 	@GetMapping("/{id}")
-	public ApiResponse<Map<String, Object>> getOrder(@PathVariable("id") Long id) {
-		return  ApiResponse.success(MessageString.FETCHED_DATA.toString(), orderService.getOrder(id), HttpStatus.OK.value());
+	public ResponseEntity<ApiResponse<Map<String, Object>>> getOrder(@PathVariable("id") Long id) {
+		return  responseUtils.buildSuccess(orderService.getOrder(id),
+				MessageString.FETCHED_DATA.toString(),
+				HttpStatus.OK);
 	}
 
 	@GetMapping
-	public ApiResponse<List<Map<String, Object>>> listOrders(@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size) {
-		return ApiResponse.success(MessageString.FETCHED_DATA.toString(),orderService.listOrders(page, size), HttpStatus.OK.value());
+	public ResponseEntity<ApiResponse<Object>> listOrders(@RequestParam("page") Integer page,
+																@RequestParam("size") Integer size) {
+		return responseUtils.buildSuccess(orderService.listOrders(page, size),
+				MessageString.FETCHED_DATA.toString(),
+				HttpStatus.OK);
 	}
 
 	@PutMapping("/{id}/status")
-	public ApiResponse<String> updateStatus(@PathVariable Long id, @RequestParam String status) {
+	public ResponseEntity<ApiResponse<String>> updateStatus(@PathVariable Long id, @RequestParam String status) {
 		orderService.updateStatus(id, status);
-		return ApiResponse.success(MessageString.FETCHED_DATA.toString(),"Status has been updated", HttpStatus.OK.value());
+		return responseUtils.buildSuccess("Status has been updated",
+				MessageString.FETCHED_DATA.toString(),
+				HttpStatus.OK);
 	}
 }

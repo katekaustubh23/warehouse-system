@@ -7,8 +7,7 @@ SELECT
     id,
     order_id,
     product_id,
-    quantity,
-    warehouse_id
+    quantity
 FROM warehouse_order.order_items o
 <#if orderId??>
 WHERE o.order_id = :orderId

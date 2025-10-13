@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  # Zookeeper - required by Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper:2888:3888
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - warehouse-network
+
+  # Kafka broker
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka
+    restart: always
+    ports:
+      - "9092:9092"
+      - "29092:29092"   # for external (localhost) access
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    networks:
+      - warehouse-network
+
+    # (Optional) Kafka UI for debugging
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    restart: always
+    ports:
+      - "8089:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - warehouse-network
+
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+      VAULT_DEV_ROOT_TOKEN_ID: hvs_uskK1KUQeYgSaJtDDH313kLF
+    volumes:
+      - ./vault/data:/vault/data
+      - ./vault-config:/vault/config
+    cap_add:
+      - IPC_LOCK
+    user: "0"
+    command: vault server -config=/vault/config/vault.hcl #production -config=/vault/config/vault.hcl
+    restart: unless-stopped
+
+networks:
+  warehouse-network:
+    driver: bridge
+
+volumes:
+  vault_data:

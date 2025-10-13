@@ -18,4 +18,6 @@ public interface UserService {
     void deleteUser(Long id, Role role) throws NoSuchFieldException;
 
     UserResponseWithPassword getUserByUsername(String username, Role role);
+
+    Boolean userExits(Role role);
 }

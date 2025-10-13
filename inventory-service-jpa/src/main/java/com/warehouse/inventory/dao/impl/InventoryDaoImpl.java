@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.warehouse.inventory.model.InventoryEvent;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -78,6 +79,18 @@ public class InventoryDaoImpl implements InventoryDao{
             queries.getProperty("inventory.delete"),
             Map.of("id", id)
         );
+    }
+
+    @Override
+    public String allocateInventory(InventoryEvent event) {
+//        Map<String, Object> warehouse = repo.findWarehouseWithMaxStock(event.getProductId());
+//        if (warehouse == null || (int) warehouse.get("quantity") < event.getQuantity()) {
+//            return "FAILED";
+//        }
+
+        Long warehouseId =  101L;//((Number) warehouse.get("warehouse_id")).longValue();
+//        repo.deductStock(warehouseId, event.getProductId(), event.getQuantity());
+        return "ALLOCATED to warehouse " + warehouseId;
     }
 
 }

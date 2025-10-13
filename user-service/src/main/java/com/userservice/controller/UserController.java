@@ -16,18 +16,20 @@ import java.util.List;
 @RequestMapping("/api/v1/user")
 public class UserController {
 
-    private final String internalSecret;
-
     private final UserService userService;
 
-    public UserController(@Value("${internal.secret}") String internalSecret, UserService userService) {
-        this.internalSecret = internalSecret;
+    public UserController( UserService userService) {
         this.userService = userService;
     }
 
     @GetMapping
     public List<UserResponse> getAllUsers(@RequestParam("role") Role role) throws NoSuchFieldException {
         return userService.getAllUsers(role);
+    }
+
+    @GetMapping("/verify/empty")
+    public Boolean anyUserExists(@RequestParam("role") Role role) throws NoSuchFieldException {
+        return userService.userExits(role);
     }
 
     @GetMapping("/{id}")
@@ -38,9 +40,6 @@ public class UserController {
     @GetMapping("/by-username/{username}")
     public UserResponseWithPassword getUserByUsername(@RequestHeader(value = "X-Internal-Secret", required = false) String secret, @PathVariable("username") String username, @RequestParam("role") Role role) {
 
-        if (secret == null || !secret.equals(internalSecret)) {
-            throw new AccessDeniedException("Access denied");
-        }
         return userService.getUserByUsername(username, role);
     }
 
