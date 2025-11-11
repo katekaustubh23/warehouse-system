@@ -91,9 +91,9 @@ public class GenericJdbcRepository {
 
 	private void logDuration(String label, String tableName, long startTime) {
         long duration = System.currentTimeMillis() - startTime;
-        logger.info("✅ [{}] completed for {} in {} ms", label, tableName, duration);
+        logger.info("[{}] completed for {} in {} ms", label, tableName, duration);
         if (duration > 1000) {
-            logger.warn("⚠️ [{}] Slow operation on {}: {} ms", label, tableName, duration);
+            logger.warn(" [{}] Slow operation on {}: {} ms", label, tableName, duration);
         }
     }
 }

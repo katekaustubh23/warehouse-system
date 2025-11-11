@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.TimeZone;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.common", "com.product_service"})
 public class ProductServiceJpaApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(ProductServiceJpaApplication.class, args);
