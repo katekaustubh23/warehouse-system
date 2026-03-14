@@ -69,6 +69,47 @@ services:
     user: "0"
     command: vault server -config=/vault/config/vault.hcl #production -config=/vault/config/vault.hcl
     restart: unless-stopped
+    networks:
+      - warehouse-network
+
+  warehouse-gateway:
+    build:
+        context: .
+        dockerfile: warehouse-gateway/Dockerfile
+    container_name: warehouse-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - vault
+      - auth-service
+      - user-service
+    networks:
+        - warehouse-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service-jdbc/Dockerfile
+    container_name: auth-service
+    env_file:
+      - .env
+    networks:
+      - warehouse-network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: user-service
+    env_file:
+      - .env
+    networks:
+      - warehouse-network
 
 networks:
   warehouse-network:
