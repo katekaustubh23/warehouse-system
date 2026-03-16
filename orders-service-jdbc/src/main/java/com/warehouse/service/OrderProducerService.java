@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderProducerService {
 
-    private final KafkaTemplate kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public OrderProducerService(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
