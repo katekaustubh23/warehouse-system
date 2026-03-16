@@ -82,6 +82,19 @@ public class InventoryDaoImpl implements InventoryDao{
     }
 
     @Override
+    public void quantityUpdate(int productId, int quantityChange) {
+        String sql = """
+                UPDATE inventory
+                        SET quantity = quantity + :quantityChange
+                        WHERE product_id = :productId
+                """;
+        jdbcTemplate.update(
+            sql,
+            Map.of("quantityChange", quantityChange, "productId", productId)
+        );
+    }
+
+    @Override
     public String allocateInventory(InventoryEvent event) {
 //        Map<String, Object> warehouse = repo.findWarehouseWithMaxStock(event.getProductId());
 //        if (warehouse == null || (int) warehouse.get("quantity") < event.getQuantity()) {

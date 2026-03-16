@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderProducerService {
 
-    private final KafkaTemplate kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public OrderProducerService(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
@@ -15,6 +15,7 @@ public class OrderProducerService {
     public void sendOrderCreatedMessage(String orderId) {
         String topic = "inventory-topic"; // Make sure inventory-service consumes this topic
         String message = "OrderCreated:" + orderId;
+
         kafkaTemplate.send(topic, orderId, message);
         System.out.println("Sent message to inventory-service: " + message);
     }

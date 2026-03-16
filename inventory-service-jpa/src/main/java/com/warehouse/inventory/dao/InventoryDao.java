@@ -12,5 +12,7 @@ public interface InventoryDao {
     Inventory save(Inventory inventory);
     void update(Inventory inventory);
     void delete(int id);
+
+    void quantityUpdate(int productId, int quantityChange);
     String allocateInventory(InventoryEvent event);
 }

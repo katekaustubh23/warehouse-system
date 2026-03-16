@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@FeignClient(name = "user-service" , url = "http://localhost:8087/api/v1/user",configuration = UserServiceClientConfig.class)
+@FeignClient(name = "user-service" , url = "http://user-service:8087/api/v1/user",configuration = UserServiceClientConfig.class)
 public interface UserServiceClient {
 
     @GetMapping("/by-username/{username}")

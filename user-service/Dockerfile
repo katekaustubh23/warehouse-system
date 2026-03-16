@@ -6,13 +6,13 @@ WORKDIR /build
 COPY . .
 
 # build only this module
-RUN mvn -pl auth-service-jdbc -am clean package -DskipTests
+RUN mvn -pl user-service -am clean package -DskipTests
 
 
 FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-COPY --from=builder /build/auth-service-jdbc/target/*.jar app.jar
+COPY --from=builder /build/user-service/target/*.jar app.jar
 
 ENTRYPOINT ["java","-jar","/app/app.jar"]
