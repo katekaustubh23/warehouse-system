@@ -1,11 +1,12 @@
 package com.warehouse.inventory.service;
 
-import com.warehouse.inventory.dto.OrderPlacedEventDto;
+import com.warehouse.inventory.dto.OrderCreatedEvent;
 import com.warehouse.inventory.dto.StockReservedEventDto;
 import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
 import org.springframework.kafka.annotation.KafkaListener;
 
 import org.springframework.stereotype.Service;
@@ -17,23 +18,34 @@ public class KafkaInventoryListener {
     private static final Logger logger = LoggerFactory.getLogger(KafkaInventoryListener.class);
 
     private final RedisStockService redisStockService;
+    private final StockCacheService stockCacheService;
     private final InventoryEventProducer inventoryEventProducer;
 
     @KafkaListener(topics="order-placed", groupId = "inventory-group")
-    public void consumerOrderPlaced(OrderPlacedEventDto event) {
+    public void consumerOrderPlaced(OrderCreatedEvent event) {
         logger.info("Received Order: {}", event.getOrderId());
-        boolean reserved = redisStockService.reverseStock(
-                event.getProductId(), event.getQuantity());
+        try {
+            for (var item : event.getItems()) {
+                logger.info("Order Item - ProductId: {}, Quantity: {}", item.getProductId(), item.getQuantity());
+                boolean reserved = redisStockService.reverseStock(
+                        item.getProductId(), item.getQuantity());
+                logger.info("redis data :: " + stockCacheService.getAvailableStock(event.getItems().get(0).getProductId().intValue()));
 
-        if(reserved){
-            logger.info("Stock reserved for order {}",event.getOrderId());
-            inventoryEventProducer.sendStockReservedEvent(new StockReservedEventDto(
-                    event.getOrderId(), event.getProductId(), event.getQuantity()));
-        }else{
-            logger.info("Failed to reserve stock for order {}",event.getOrderId());
-            inventoryEventProducer.sendStockRejectedEvent(new StockReservedEventDto(
-                    event.getOrderId(), event.getProductId(), event.getQuantity()));
+                if(reserved){
+                    logger.info("Stock reserved for order {}",event.getOrderId());
+                    inventoryEventProducer.sendStockReservedEvent(new StockReservedEventDto(
+                            event.getOrderId(), item.getProductId(), item.getQuantity()));
+                }else{
+                    logger.info("Failed to reserve stock for order {}",event.getOrderId());
+                    inventoryEventProducer.sendStockRejectedEvent(new StockReservedEventDto(
+                            event.getOrderId(), item.getProductId(), item.getQuantity()));
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage());
         }
+
     }
 //    public void consumeOrderCreated(ConsumerRecord<String, String> record) {
 //        logger.info("📦 Received message from Kafka topic='{}': key={}, value={}",

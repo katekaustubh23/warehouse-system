@@ -3,9 +3,8 @@ package com.warehouse.service.impl;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import com.warehouse.config.PropertyConfiguration;
-import com.warehouse.model.InventoryHoldResultEvent;
 import com.warehouse.model.OrderCreatedEvent;
+import com.warehouse.service.InventoryGrpcClient;
 import com.warehouse.service.OrderProducerService;
 import jakarta.annotation.PostConstruct;
 
@@ -13,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
-import org.springframework.core.env.Environment;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.warehouse.constant.OrderStatus;
@@ -28,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderServiceImpl implements OrderService {
 	private final OrderDAO orderDAO;
 	private final ApplicationContext ctx;
+	private final InventoryGrpcClient inventoryGrpcClient;
 	private final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
 	private final Map<OrderStatus, OrderStatusHandler> handler = new EnumMap<>(OrderStatus.class);
@@ -36,9 +34,10 @@ public class OrderServiceImpl implements OrderService {
 //	private final String inventoryResultTopic;
 //	private final PropertyConfiguration;
 
-	public OrderServiceImpl(OrderDAO orderDao, ApplicationContext ctx, OrderProducerService orderProducerService) {
+	public OrderServiceImpl(OrderDAO orderDao, ApplicationContext ctx, InventoryGrpcClient inventoryGrpcClient, OrderProducerService orderProducerService) {
 		this.orderDAO = orderDao;
 		this.ctx = ctx;
+		this.inventoryGrpcClient = inventoryGrpcClient;
 		this.orderProducerService = orderProducerService;
 		// Can be replaced with common property configuration file
 //		this.orderTopic = env.getProperty("order.topic.order-created","order.created");
@@ -72,8 +71,9 @@ public class OrderServiceImpl implements OrderService {
 //		evt.setItems(order.getItems());
 //		evt.setRequestId(requestId.toString());
 //		evt.setCreatedAt(LocalDateTime.now());
-
-		orderProducerService.sendOrderCreatedMessage(String.valueOf(orderId));
+//		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId.get(), order.getItems());
+		inventoryGrpcClient.reserveStock(order.getItems());
+//		orderProducerService.sendOrderCreatedMessage(orderCreatedEvent);
 
 		return orderId.get();
 	}

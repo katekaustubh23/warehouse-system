@@ -19,6 +19,6 @@ public class PropertyConfiguration {
     @Value("${spring.kafka.producer.properties.enable.idempotence}")  // not needed
     private String idempotent;
 
-//    @Value("${spring.kafka.consumer.group-id}")  // not needed
-//    private String groupId;
+    @Value("${spring.kafka.consumer.group-id}")  // not needed
+    private String groupId;
 }

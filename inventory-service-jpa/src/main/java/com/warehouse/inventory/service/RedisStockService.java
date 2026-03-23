@@ -29,6 +29,7 @@ public class RedisStockService {
         script.setResultType(Long.class);
         Long result = redisTemplate.execute(script, Collections
                 .singletonList("stock:product:" + productId), quantity);
+        System.out.println("Attempting to reverse stock for product = " + result);
         if (result != null) {
             System.out.println("Stock reversed for productId=" + productId + ", quantity=" + quantity + ", newStock=" + result);
             return true;

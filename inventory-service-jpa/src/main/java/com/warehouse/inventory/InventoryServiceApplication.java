@@ -9,7 +9,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import java.util.TimeZone;
 
 @EnableKafka
-@SpringBootApplication(exclude = { UserDetailsServiceAutoConfiguration.class },scanBasePackages = { "com.warehouse.inventory","com.authlib"})
+@SpringBootApplication(exclude = { UserDetailsServiceAutoConfiguration.class },scanBasePackages = { "com.warehouse.inventory","com.authlib","com.inventory.grpc" })
 public class InventoryServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(InventoryServiceApplication.class, args);

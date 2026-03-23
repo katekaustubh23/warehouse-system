@@ -1,11 +1,13 @@
 package com.warehouse.inventory.dao.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import com.warehouse.inventory.model.InventoryEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -16,13 +18,18 @@ import com.warehouse.inventory.model.Inventory;
 
 @Repository
 public class InventoryDaoImpl implements InventoryDao{
-	
+
+    private final Logger logger = LoggerFactory.getLogger(InventoryDaoImpl.class);
 	private final NamedParameterJdbcTemplate jdbcTemplate;
     private final Properties queries;
+    private final RedisTemplate<String, Object> redisTemplate;
     
-    public InventoryDaoImpl(NamedParameterJdbcTemplate jdbcTemplate, @Qualifier("inventoryQueries") Properties queries) {
+    public InventoryDaoImpl(NamedParameterJdbcTemplate jdbcTemplate,
+                            @Qualifier("inventoryQueries") Properties queries,
+                            RedisTemplate<String, Object> redisTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.queries = queries;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -37,11 +44,40 @@ public class InventoryDaoImpl implements InventoryDao{
     @Override
     public Inventory findById(int id) {
         Map<String, Object> params = Map.of("id", id);
-        return jdbcTemplate.queryForObject(
-            queries.getProperty("inventory.fetch.by.id"),
+
+        String key = "stock:product:" + id;
+        String key2 = "data:product:" + id;
+        Object cachedStock = redisTemplate.opsForValue().get(key);
+        Map<Object, Object> invObject = redisTemplate.opsForHash().entries(key2);
+        if(cachedStock != null && !invObject.isEmpty()){
+            logger.info("Cache hit for productId=" + id + ", stock=" + cachedStock);
+            Inventory inv = new Inventory();
+            inv.setProductId(Long.valueOf(id));
+            inv.setQuantity((Integer) cachedStock);
+            inv.setId(UUID.fromString(invObject.get("id").toString()));
+            inv.setName(invObject.get("itemName").toString());
+            return inv;
+
+        }
+        Inventory inventory = jdbcTemplate.queryForObject(
+            queries.getProperty("inventory.getById"),
             new MapSqlParameterSource(params),
             new BeanPropertyRowMapper<>(Inventory.class)
         );
+
+        if(inventory != null){
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", inventory.getId());
+            map.put("itemName", inventory.getName());
+            map.put("productId", inventory.getProductId());
+            map.put("quantity", inventory.getQuantity());
+
+            redisTemplate.opsForValue().set(key,inventory.getQuantity(),10, TimeUnit.MINUTES);
+            redisTemplate.opsForHash().putAll(key2,map);
+            redisTemplate.expire(key2,10, TimeUnit.MINUTES);
+        }
+
+        return inventory;
     }
 
     @Override

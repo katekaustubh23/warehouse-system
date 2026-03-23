@@ -1,14 +1,16 @@
-package com.warehouse.inventory.dto;
+package com.warehouse.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class OrderPlacedEventDto {
+@AllArgsConstructor
+@ToString
+public class StockReservedEventDto {
     private Long orderId;
     private Long productId;
     private int quantity;

@@ -19,7 +19,7 @@
     </entry>
 
     <entry key="inventory.getById">
-        SELECT * FROM inventory_schema.inventory WHERE product_id = ?;
+        SELECT * FROM inventory_schema.inventory WHERE product_id = :id;
     </entry>
 
     <entry key="inventory.getAll">

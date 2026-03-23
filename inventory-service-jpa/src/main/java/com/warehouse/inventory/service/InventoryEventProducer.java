@@ -12,10 +12,12 @@ public class InventoryEventProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void sendStockReservedEvent(StockReservedEventDto event) {
+        System.out.println(""+ "Sending stock-reserved event for productId: " + event.getProductId() + ", orderId: " + event.getOrderId());
         kafkaTemplate.send("stock-reserved", String.valueOf(event.getProductId()), event);
     }
 
      public void sendStockRejectedEvent(StockReservedEventDto event) {
+        System.out.println(""+ "Sending stock-rejected event for productId: " + event.getProductId() + ", orderId: " + event.getOrderId());
          kafkaTemplate.send("stock-rejected", String.valueOf(event.getProductId()),event);
     }
 }

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package inventory;
+
+option java_multiple_files = true;
+option java_package = "com.inventory.grpc";
+
+service InventoryService {
+  rpc ReserveStock (ReserveRequest) returns (ReserveResponse);
+  rpc ConfirmStock (ConfirmRequest) returns (ConfirmResponse);
+  rpc ReleaseStock (ReleaseRequest) returns (ReleaseResponse);
+}
+
+message Item {
+  int64 product_id = 1;
+  int32 quantity = 2;
+}
+
+message ReserveRequest {
+  repeated Item items = 1;
+}
+
+message ReserveResponse {
+  string status = 1;
+  repeated Item accepted = 2;
+  repeated Item rejected = 3;
+}
+
+message ConfirmRequest {
+  int64 order_id = 1;
+}
+
+message ConfirmResponse {
+  string status = 1;
+}
+
+message ReleaseRequest {
+  int64 order_id = 1;
+}
+
+message ReleaseResponse {
+  string status = 1;
+}

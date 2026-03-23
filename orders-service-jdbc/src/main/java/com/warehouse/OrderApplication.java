@@ -10,7 +10,7 @@ import java.util.TimeZone;
 
 @EnableAspectJAutoProxy
 @SpringBootApplication(exclude = { UserDetailsServiceAutoConfiguration.class },
-        scanBasePackages = {"com.warehouse", "com.logging", "com.authlib","com.common"})
+        scanBasePackages = {"com.warehouse", "com.logging", "com.authlib","com.common", "com.inventory"})
 public class OrderApplication {
     public static void main(String[] args) {
         SpringApplication.run(OrderApplication.class, args);
