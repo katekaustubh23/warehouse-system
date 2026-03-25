@@ -16,14 +16,13 @@
     <properties>
         <java.version>17</java.version>
         <!-- Use aligned modern versions -->
-        <grpc.version>1.79.0</grpc.version>
         <protobuf.version>3.25.3</protobuf.version>
+        <grpc.version>1.57.2</grpc.version>
     </properties>
     <dependencies>
-        <!-- gRPC -->
         <dependency>
             <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty-shaded</artifactId>
+            <artifactId>grpc-stub</artifactId>
             <version>${grpc.version}</version>
         </dependency>
 
@@ -33,18 +32,12 @@
             <version>${grpc.version}</version>
         </dependency>
 
+        <!-- Needed for Java 9+ -->
         <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-stub</artifactId>
-            <version>${grpc.version}</version>
-        </dependency>
-
-        <!-- protobuf -->
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>${protobuf.version}</version>
-            <scope>compile</scope>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>annotations-api</artifactId>
+            <version>6.0.53</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -54,7 +47,7 @@
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.0</version>
+                <version>1.7.1</version>
             </extension>
         </extensions>
 
@@ -70,6 +63,7 @@
                     </protocArtifact>
 
                     <pluginId>grpc-java</pluginId>
+
                     <pluginArtifact>
                         io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
                     </pluginArtifact>

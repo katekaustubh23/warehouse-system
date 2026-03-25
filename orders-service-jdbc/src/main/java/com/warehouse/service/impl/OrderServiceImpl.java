@@ -72,8 +72,10 @@ public class OrderServiceImpl implements OrderService {
 //		evt.setRequestId(requestId.toString());
 //		evt.setCreatedAt(LocalDateTime.now());
 //		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId.get(), order.getItems());
-		inventoryGrpcClient.reserveStock(order.getItems());
+//		inventoryGrpcClient.reserveStock(order.getItems());
 //		orderProducerService.sendOrderCreatedMessage(orderCreatedEvent);
+
+		inventoryGrpcClient.reserve(new OrderCreatedEvent(orderId.get(), order.getItems()));
 
 		return orderId.get();
 	}

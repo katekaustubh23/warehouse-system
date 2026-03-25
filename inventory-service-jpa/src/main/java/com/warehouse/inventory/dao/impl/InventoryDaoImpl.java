@@ -1,9 +1,13 @@
 package com.warehouse.inventory.dao.impl;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import com.inventory.grpc.OrderItem;
 import com.warehouse.inventory.model.InventoryEvent;
+import com.warehouse.inventory.model.InventoryReserved;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -140,6 +144,88 @@ public class InventoryDaoImpl implements InventoryDao{
         Long warehouseId =  101L;//((Number) warehouse.get("warehouse_id")).longValue();
 //        repo.deductStock(warehouseId, event.getProductId(), event.getQuantity());
         return "ALLOCATED to warehouse " + warehouseId;
+    }
+
+    /**
+     *  function to store reserve quantity into DB and set expiry time for reservation
+     *  */
+    @Override
+    public InventoryReserved updateReserveQuantity(InventoryReserved reserved){
+        Map<String, Object> params = Map.of(
+                "orderId", reserved.getOrderId(),
+                "productId", reserved.getProductId(),
+                "quantity", reserved.getQuantity(),
+                "reserved", reserved.getStatus(),
+                "expiredAt", reserved.getExpiredAt()
+        );
+        String sql = """
+                INSERT INTO inventory_schema.reserved_qnty (order_id, product_id, quantity, status, expiry_time, created_at, updated_at)
+                VALUES (:orderId, :productId, :quantity, :reserved, :expiredAt, NOW(), NOW())
+                ON CONFLICT (order_id) DO UPDATE SET
+                    quantity = EXCLUDED.quantity,
+                    status = EXCLUDED.status,
+                    expiry_time = EXCLUDED.expiry_time
+                RETURNING id
+                """;
+        Integer id = jdbcTemplate.queryForObject(sql, new MapSqlParameterSource(params), Integer.class);
+        reserved.setId(id);
+        return reserved;
+    }
+
+    @Override
+    public void batchSaveReserveQuantity(List<InventoryReserved> reserveds) {
+        String sql = """
+        INSERT INTO inventory_schema.reserved_qnty 
+        (order_id, product_id, quantity, status, expiry_time, created_at, updated_at)
+        VALUES (:orderId, :productId, :quantity, :status, :expiryTime, NOW(), NOW())
+        ON CONFLICT (order_id, product_id) DO UPDATE SET
+            quantity = EXCLUDED.quantity,
+            status = EXCLUDED.status,
+            expiry_time = EXCLUDED.expiry_time
+        """;
+
+        List<MapSqlParameterSource> batchParams = reserveds.stream()
+                .map(item -> new MapSqlParameterSource()
+                        .addValue("orderId", item.getOrderId())
+                        .addValue("productId", item.getProductId())
+                        .addValue("quantity", item.getQuantity())
+                        .addValue("status", "RESERVED")
+                        .addValue("expiryTime", item.getExpiredAt())
+                )
+                .toList();
+
+        jdbcTemplate.batchUpdate(sql, batchParams.toArray(new MapSqlParameterSource[0]));
+    }
+
+    @Override
+    public List<InventoryReserved> findByOrderId(Long orderId) {
+
+        String sql = """
+        SELECT id, order_id, product_id, quantity, status, expiry_time
+        FROM inventory_schema.reserved_qnty
+        WHERE order_id = :orderId
+    """;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("orderId", orderId);
+
+        return jdbcTemplate.query(sql, params, (rs, rowNum) -> {
+
+            InventoryReserved obj = new InventoryReserved();
+
+            obj.setId(rs.getInt("id"));
+            obj.setOrderId(rs.getLong("order_id"));
+            obj.setProductId(rs.getLong("product_id"));
+            obj.setQuantity(rs.getInt("quantity"));
+            obj.setStatus(rs.getString("status"));
+
+            Timestamp expiry = rs.getTimestamp("expiry_time");
+            if (expiry != null) {
+                obj.setExpiredAt(expiry.toLocalDateTime());
+            }
+
+            return obj;
+        });
     }
 
 }

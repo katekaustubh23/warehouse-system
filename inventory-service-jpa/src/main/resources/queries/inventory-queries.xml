@@ -26,4 +26,10 @@
         SELECT * FROM inventory_schema.inventory ORDER BY updated_at DESC;
     </entry>
 
+<!--    <entry key="inventory_reserved.insert">-->
+<!--        INSERT INTO inventory_schema.reserved_qnty(order_id, product_id, quantity, status, expiry_time, created_at, updated_at)-->
+<!--        VALUES (?, ?, ?, ?, ?, NOW(), NOW())-->
+<!--        RETURNING *;-->
+<!--    </entry>-->
+
 </properties>
