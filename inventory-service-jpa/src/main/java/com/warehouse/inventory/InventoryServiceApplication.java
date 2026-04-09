@@ -11,7 +11,8 @@ import java.util.TimeZone;
 
 @EnableKafka
 @EnableScheduling
-@SpringBootApplication(exclude = { UserDetailsServiceAutoConfiguration.class },scanBasePackages = { "com.warehouse.inventory","com.authlib"})
+@SpringBootApplication(exclude = { UserDetailsServiceAutoConfiguration.class },
+        scanBasePackages = { "com.warehouse.inventory","com.authlib"})
 public class InventoryServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(InventoryServiceApplication.class, args);
