@@ -14,8 +14,7 @@ import java.util.List;
 @ToString
 public class OrderCreatedEvent {
     private Long orderId;
-//    private Long userId;
+
     private List<OrderItem> items;
-//    private String requestId; // UUID as String
-//    private LocalDateTime createdAt;
+
 }

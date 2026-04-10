@@ -53,6 +53,7 @@ public class GenericJdbcRepository {
 	public Optional<Long> insert(String tableName, Map<String, Object> columnValues) {
 		long start = System.currentTimeMillis();
         String sql = buildInsertSQL(tableName, columnValues.keySet());
+		logger.info("SQL query :: " + sql);
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         namedJdbcTemplate.update(sql, new MapSqlParameterSource(columnValues), keyHolder, new String[] {"id"});

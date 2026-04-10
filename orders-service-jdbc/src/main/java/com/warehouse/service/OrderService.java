@@ -3,6 +3,7 @@ package com.warehouse.service;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.warehouse.model.Orders;
 
 public interface OrderService {
@@ -15,5 +16,5 @@ public interface OrderService {
 
 	void updateStatus(Long id, String status);
 
-    Long confirmOrder(Long order, String status);
+    Long confirmOrder(Long order, String status) throws JsonProcessingException;
 }

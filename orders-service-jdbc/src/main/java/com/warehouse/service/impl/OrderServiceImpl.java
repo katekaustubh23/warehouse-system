@@ -4,7 +4,12 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.warehouse.dao.OutBoxDAO;
+import com.warehouse.model.OrderConfirmEventDto;
 import com.warehouse.model.OrderCreatedEvent;
+import com.warehouse.model.OutBox;
 import com.warehouse.service.InventoryGrpcClient;
 import com.warehouse.service.OrderProducerService;
 import jakarta.annotation.PostConstruct;
@@ -27,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class OrderServiceImpl implements OrderService {
 	private final OrderDAO orderDAO;
+	private final OutBoxDAO outBoxDAO;
+	private final ObjectMapper objectMapper;
 	private final ApplicationContext ctx;
 	private final InventoryGrpcClient inventoryGrpcClient;
 	private final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
@@ -36,8 +43,10 @@ public class OrderServiceImpl implements OrderService {
 //	private final String inventoryResultTopic;
 //	private final PropertyConfiguration;
 
-	public OrderServiceImpl(OrderDAO orderDao, ApplicationContext ctx, InventoryGrpcClient inventoryGrpcClient) {
+	public OrderServiceImpl(OrderDAO orderDao,OutBoxDAO outBoxDAO,ObjectMapper objectMapper, ApplicationContext ctx, InventoryGrpcClient inventoryGrpcClient) {
 		this.orderDAO = orderDao;
+		this.outBoxDAO = outBoxDAO;
+		this.objectMapper = objectMapper;
 		this.ctx = ctx;
 		this.inventoryGrpcClient = inventoryGrpcClient;
 		// Can be replaced with common property configuration file
@@ -69,8 +78,9 @@ public class OrderServiceImpl implements OrderService {
 		return orderId.get();
 	}
 
+	@Transactional
 	@Override
-	public Long confirmOrder(Long orderId, String status) {
+	public Long confirmOrder(Long orderId, String status) throws JsonProcessingException {
 		Map<String, Object> orderMap = getOrder(orderId);
 
 		Timestamp timestamp = (Timestamp) orderMap.get("order_date");
@@ -83,7 +93,24 @@ public class OrderServiceImpl implements OrderService {
 
 		log.info("Confirming order with id={}, current status={}, target status={}",
 				orderId, order.getStatus(), status);
-		return null;
+
+		// Guard check
+		if (order.getStatus() != OrderStatus.PENDING) {
+			throw new IllegalStateException("Order cannot be confirmed");
+		}
+
+		// make is process
+		order.setStatus(OrderStatus.PROCESSING); // NOT CONFIRMED
+		orderDAO.saveOrder(order);
+		OrderConfirmEventDto orderConfirm = new OrderConfirmEventDto(orderId, status);
+		String payload = objectMapper.writeValueAsString(orderConfirm);
+		outBoxDAO.saveOutBox(new OutBox().builder()
+				.payload(payload)
+				.type("CONFIRM_ORDER")
+				.status(OrderStatus.PROCESSING.name())
+				.createdAt(LocalDateTime.now())
+				.build());
+		return orderId;
 	}
 
 	@Override
