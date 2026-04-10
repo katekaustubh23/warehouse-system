@@ -1,12 +1,18 @@
 package com.warehouse.inventory.service.scheduler;
 
 import com.warehouse.inventory.dao.InventoryDao;
+import com.warehouse.inventory.dto.StockReservedEventDto;
 import com.warehouse.inventory.model.InventoryReserved;
+import com.warehouse.inventory.service.InventoryEventProducer;
+import com.warehouse.inventory.service.InventoryService;
 import com.warehouse.inventory.service.RedisStockService;
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -20,34 +26,57 @@ public class ReservationExpiryWorker {
 
     private final static Logger logger = LoggerFactory.getLogger(ReservationExpiryWorker.class);
     private final RedisTemplate<String, Object> redisTemplate;
-    private final RedisStockService redisStockService ;
-    private final InventoryDao reservationRepo;
+    private final InventoryService inventoryService;
+    private final InventoryEventProducer inventoryEventProducer;
 
     private static final String EXPIRY_ZSET = "reservation:expiry";
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRateString = "PT2M") // every 2 minutes
     public void processExpiredReservations() {
 
         long now = System.currentTimeMillis();
         logger.info(">> Checking for expired reservations at {}", now);
         // WHY: only fetch expired items → efficient
-        Set<Object> expiredOrders =
+        int batchSize = 50;
+
+        for (int i = 0; i < batchSize; i++) {
+
+            // ✅ Atomic fetch + remove (ZPOPMIN)
+            ZSetOperations.TypedTuple<Object> tuple =
+                    redisTemplate.opsForZSet().popMin(EXPIRY_ZSET);
+
+            if (tuple == null) {
+                return; // no more data
+            }
+
+            Long orderId = Long.valueOf(tuple.getValue().toString());
+            long expiryTime = tuple.getScore().longValue();
+
+            // Important: skip if not actually expired
+            if (expiryTime > now) {
+                // put back if not expired
                 redisTemplate.opsForZSet()
-                        .rangeByScore(EXPIRY_ZSET, 0, now);
-        logger.info(" << Found {} expired reservations", expiredOrders.size());
-        if (expiredOrders == null || expiredOrders.isEmpty()) return;
+                        .add(EXPIRY_ZSET, orderId, expiryTime);
+                return;
+            }
 
-        for (Object orderIdStr : expiredOrders) {
-            logger.info(" << orderId ={}", orderIdStr.toString());
-            Long orderId = Long.valueOf(orderIdStr.toString());
+            StockReservedEventDto event = new StockReservedEventDto(orderId,0L,0,"EXPIRED");
 
-            // WHY: business logic rollback
-            redisStockService.rollback(orderId);
-
-            // WHY: remove from queue → prevent reprocessing
-            redisTemplate.opsForZSet()
-                    .remove(EXPIRY_ZSET, orderIdStr);
+            // publish event instead of processing directly
+            inventoryService.releaseExpiredStock(orderId); // DB + stock rollback
+//            try {
+//                logger.info("Processing expired order {}", orderId);
+//
+//                orderService.expireOrder(orderId); // DB + stock rollback
+//
+//            } catch (Exception ex) {
+//
+//                logger.error("Failed to process order {}", orderId, ex);
+//
+//                // ❗ Reinsert for retry
+//                redisTemplate.opsForZSet()
+//                        .add(EXPIRY_ZSET, orderId, now + 30000); // retry after 30 sec
+//            }
         }
     }
-
 }

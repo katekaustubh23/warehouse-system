@@ -39,6 +39,14 @@ public class OrderController {
 		return responseUtils.buildSuccess(id, MessageString.CREATED_DATA.toString(), HttpStatus.CREATED);
 	}
 
+	/**Confirm order*/
+	@PutMapping("/confirm")
+	public ResponseEntity<ApiResponse<Long>> confirmOrder(@RequestParam("orderId") Long orderId,
+														  @RequestParam("status") String status) {
+		Long id = orderService.confirmOrder(orderId, status);
+		return responseUtils.buildSuccess(id, MessageString.CREATED_DATA.toString(), HttpStatus.CREATED);
+	}
+
 	@GetMapping("/{id}")
 	public ResponseEntity<ApiResponse<Map<String, Object>>> getOrder(@PathVariable("id") Long id) {
 		return  responseUtils.buildSuccess(orderService.getOrder(id),

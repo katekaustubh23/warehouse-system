@@ -2,15 +2,18 @@ package com.warehouse.service;
 
 import com.warehouse.model.StockReservedEventDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderCosumerService {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OrderService orderService;
 
     @KafkaListener(topics = {"stock-reserved", "stock-rejected"}, groupId = "orders-group")
         public void consumeInventoryResponse(StockReservedEventDto event) {
@@ -26,4 +29,12 @@ public class OrderCosumerService {
 //                // Update order status in database (not implemented here)
 //            }
         }
+
+    @KafkaListener(topics = {"order-expired"}, groupId = "orders-group")
+    public void consumeExpiredOrder(StockReservedEventDto event) {
+        log.info("Received message from inventory-service order-expired or cancel: " + event.toString());
+        // Process the message and update order status accordingly
+        orderService.updateStatus(event.getOrderId(), "EXPIRED");
+
+    }
 }

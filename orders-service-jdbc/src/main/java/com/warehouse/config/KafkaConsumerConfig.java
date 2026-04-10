@@ -1,6 +1,5 @@
 package com.warehouse.config;
 
-import com.warehouse.model.InventoryHoldResultEvent;
 import com.warehouse.model.StockReservedEventDto;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -10,9 +9,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.ConsumerProperties;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.validation.ObjectError;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +43,7 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, StockReservedEventDto> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        // you can tune concurrency to match topic partitions
+        // can tune concurrency to match topic partitions
         factory.setConcurrency(3);
         return factory;
     }

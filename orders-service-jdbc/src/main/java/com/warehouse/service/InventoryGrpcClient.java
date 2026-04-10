@@ -35,30 +35,4 @@ public class InventoryGrpcClient {
         return response;
     }
 
-//
-//    public ReserveResponse reserveStock(List<OrderItem> orderItems) {
-//        ReserveRequest request = ReserveRequest.newBuilder()
-//                .addAllItems(orderItems.stream()
-//                        .map(i -> Item.newBuilder()
-//                                .setProductId(i.getProductId())
-//                                .setQuantity(i.getQuantity())
-//                                .build())
-//                        .toList())
-//                .build();
-//
-//        Metadata metadata = new Metadata();
-//        Metadata.Key<String> authKey =
-//                Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
-//
-//        metadata.put(authKey, "Bearer internal-secret");
-//
-//        // ✅ Correct way: interceptor
-//        ClientInterceptor interceptor =
-//                MetadataUtils.newAttachHeadersInterceptor(metadata);
-//
-//        // Attach interceptor to stub
-//        InventoryServiceGrpc.InventoryServiceBlockingStub securedStub =
-//                inventoryStub.withInterceptors(interceptor);
-//        return securedStub.reserveStock(request);
-//    }
 }

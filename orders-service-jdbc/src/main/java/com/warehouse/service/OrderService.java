@@ -15,4 +15,5 @@ public interface OrderService {
 
 	void updateStatus(Long id, String status);
 
+    Long confirmOrder(Long order, String status);
 }

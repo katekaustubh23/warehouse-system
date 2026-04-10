@@ -1,5 +1,6 @@
 package com.warehouse.service.impl;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -8,6 +9,7 @@ import com.warehouse.service.InventoryGrpcClient;
 import com.warehouse.service.OrderProducerService;
 import jakarta.annotation.PostConstruct;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -18,9 +20,10 @@ import com.warehouse.constant.OrderStatus;
 import com.warehouse.dao.OrderDAO;
 import com.warehouse.model.Orders;
 import com.warehouse.service.OrderService;
-import com.warehouse.service.OrderStatusHandler;
+import com.warehouse.service.handler.OrderStatusHandler;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
 	private final OrderDAO orderDAO;
@@ -29,16 +32,14 @@ public class OrderServiceImpl implements OrderService {
 	private final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
 	private final Map<OrderStatus, OrderStatusHandler> handler = new EnumMap<>(OrderStatus.class);
-	private final OrderProducerService orderProducerService;
 //	private final String orderTopic;
 //	private final String inventoryResultTopic;
 //	private final PropertyConfiguration;
 
-	public OrderServiceImpl(OrderDAO orderDao, ApplicationContext ctx, InventoryGrpcClient inventoryGrpcClient, OrderProducerService orderProducerService) {
+	public OrderServiceImpl(OrderDAO orderDao, ApplicationContext ctx, InventoryGrpcClient inventoryGrpcClient) {
 		this.orderDAO = orderDao;
 		this.ctx = ctx;
 		this.inventoryGrpcClient = inventoryGrpcClient;
-		this.orderProducerService = orderProducerService;
 		// Can be replaced with common property configuration file
 //		this.orderTopic = env.getProperty("order.topic.order-created","order.created");
 //		this.inventoryResultTopic = env.getProperty("order.topic.inventory-hold-result","inventory.hold.result");
@@ -63,21 +64,26 @@ public class OrderServiceImpl implements OrderService {
 		Optional<Long> orderId = orderDAO.saveOrder(order);
 		order.getItems().forEach(i -> i.setOrderId(orderId.get()));
         orderDAO.saveOrderItems(order.getItems());
-
-		// 2) publish OrderCreatedEvent — key by orderId for partitioning
-//		OrderCreatedEvent evt = new OrderCreatedEvent();
-//		evt.setOrderId(orderId.orElse(-1L));
-//		evt.setUserId(order.getUserId());
-//		evt.setItems(order.getItems());
-//		evt.setRequestId(requestId.toString());
-//		evt.setCreatedAt(LocalDateTime.now());
-//		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId.get(), order.getItems());
-//		inventoryGrpcClient.reserveStock(order.getItems());
-//		orderProducerService.sendOrderCreatedMessage(orderCreatedEvent);
-
 		inventoryGrpcClient.reserve(new OrderCreatedEvent(orderId.get(), order.getItems()));
 
 		return orderId.get();
+	}
+
+	@Override
+	public Long confirmOrder(Long orderId, String status) {
+		Map<String, Object> orderMap = getOrder(orderId);
+
+		Timestamp timestamp = (Timestamp) orderMap.get("order_date");
+
+		LocalDateTime orderDate = timestamp.toLocalDateTime();
+		Orders order = Orders.orderMapper((Long) orderMap.get("id"),
+				(Long) orderMap.get("user_id"), orderDate,
+				OrderStatus.valueOf((String) orderMap.get("status")),
+				(String) orderMap.get("delivery_address"), new ArrayList<>());
+
+		log.info("Confirming order with id={}, current status={}, target status={}",
+				orderId, order.getStatus(), status);
+		return null;
 	}
 
 	@Override
@@ -108,7 +114,6 @@ public class OrderServiceImpl implements OrderService {
         if (statusHandler == null) {
             throw new IllegalArgumentException("No handler found for status: " + status);
         }
-//        statusHandler.updateStatus(order);
         orderDAO.updateStatus(statusHandler, orderId);
         logger.info("Order {} status updated to {}", orderId, statusHandler.getHandledStatus());
 

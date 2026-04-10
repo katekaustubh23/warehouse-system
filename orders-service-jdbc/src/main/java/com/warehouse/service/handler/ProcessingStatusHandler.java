@@ -1,4 +1,4 @@
-package com.warehouse.service;
+package com.warehouse.service.handler;
 
 import org.springframework.stereotype.Component;
 
@@ -6,12 +6,7 @@ import com.warehouse.constant.OrderStatus;
 import com.warehouse.model.Orders;
 
 @Component
-public class ProcessingStatusHandler implements OrderStatusHandler{
-
-	@Override
-	public void updateStatus(Orders order) {
-		 order.setStatus(OrderStatus.PROCESSING);
-	}
+public class ProcessingStatusHandler implements OrderStatusHandler {
 
 	@Override
 	public OrderStatus getHandledStatus() {

@@ -20,4 +20,9 @@ public class InventoryEventProducer {
         System.out.println(""+ "Sending stock-rejected event for productId: " + event.getProductId() + ", orderId: " + event.getOrderId());
          kafkaTemplate.send("stock-rejected", String.valueOf(event.getProductId()),event);
     }
+
+    public void sendOrderExpired(StockReservedEventDto event) {
+        System.out.println(""+ "Sending order-expired event for orderId: " + event.getOrderId());
+        kafkaTemplate.send("order-expired", String.valueOf(event.getOrderId()),event);
+    }
 }

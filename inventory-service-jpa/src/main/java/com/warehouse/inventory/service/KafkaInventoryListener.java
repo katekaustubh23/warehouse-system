@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
 import org.springframework.kafka.annotation.KafkaListener;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,11 +36,11 @@ public class KafkaInventoryListener {
                 if(reserved){
                     logger.info("Stock reserved for order {}",event.getOrderId());
                     inventoryEventProducer.sendStockReservedEvent(new StockReservedEventDto(
-                            event.getOrderId(), item.getProductId(), item.getQuantity()));
+                            event.getOrderId(), item.getProductId(), item.getQuantity(), "RESERVED"));
                 }else{
                     logger.info("Failed to reserve stock for order {}",event.getOrderId());
                     inventoryEventProducer.sendStockRejectedEvent(new StockReservedEventDto(
-                            event.getOrderId(), item.getProductId(), item.getQuantity()));
+                            event.getOrderId(), item.getProductId(), item.getQuantity(), "REJECTED"));
                 }
             }
 
@@ -46,6 +48,43 @@ public class KafkaInventoryListener {
             logger.error(e.getLocalizedMessage());
         }
 
+    }
+
+    @KafkaListener(topics = "order-expired")
+    @Transactional
+    public void handleExpiry(StockReservedEventDto eventDto) {
+
+//        // 1. Idempotency
+//        if (processedRepo.existsById(eventDto.getOrderId())) return;
+//
+//        // 2. Fetch reservations
+//        List<InventoryReserved> reservations =
+//                reservationRepository.findByOrderId(eventDto.getOrderId());
+//
+//        if (reservations.isEmpty()) {
+//            processedRepo.save(new Processed(orderId));
+//            return;
+//        }
+//
+//        // 3. Release stock
+//        for (Reservation r : reservations) {
+//            inventoryRepository.increaseStock(
+//                    r.getProductId(),
+//                    r.getReservedQty()
+//            );
+//        }
+//
+//        // 4. Delete reservation
+//        reservationRepository.deleteByOrderId(orderId);
+//
+//        // 5. Mark processed
+//        processedRepo.save(new Processed(orderId));
+//
+//        // 6. Cleanup Redis
+//        redisTemplate.delete("reserve:" + orderId);
+//
+//        // 🔥 7. Notify Order Service
+//        kafkaProducer.send("order-status-update", orderId);
     }
 //    public void consumeOrderCreated(ConsumerRecord<String, String> record) {
 //        logger.info("📦 Received message from Kafka topic='{}': key={}, value={}",

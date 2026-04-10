@@ -14,4 +14,5 @@ public class StockReservedEventDto {
     private Long orderId;
     private Long productId;
     private int quantity;
+    private String status; // "RESERVED" or "REJECTED"
 }

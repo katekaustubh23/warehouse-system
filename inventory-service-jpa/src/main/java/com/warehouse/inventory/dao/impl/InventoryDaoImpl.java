@@ -228,4 +228,38 @@ public class InventoryDaoImpl implements InventoryDao{
         });
     }
 
+    /* release stock for expired order */
+    @Override
+    public int releasedStock(Long orderId) {
+        String sql = """
+                WITH updated_rows AS (
+                    SELECT product_id, quantity
+                    FROM inventory_schema.reserved_qnty
+                    WHERE order_id = :orderId
+                      AND status = 'RESERVED'
+                )
+                UPDATE inventory_schema.inventory i
+                SET quantity = i.quantity + ur.quantity
+                FROM updated_rows ur
+                WHERE i.product_id = ur.product_id;
+                """;
+
+
+        return jdbcTemplate.update(sql, Map.of("orderId", orderId));
+    }
+
+    /*** mark the reservation as released after stock is released for expired order*/
+    @Override
+    public void makeReleased(Long orderId) {
+        String sql = """
+        UPDATE inventory_schema.reserved_qnty
+        SET status = 'RELEASED',
+            updated_at = EXTRACT(EPOCH FROM NOW()) * 1000
+        WHERE order_id = :orderId
+          AND status = 'RESERVED'
+    """;
+
+        jdbcTemplate.update(sql, Map.of("orderId", orderId));
+    }
+
 }

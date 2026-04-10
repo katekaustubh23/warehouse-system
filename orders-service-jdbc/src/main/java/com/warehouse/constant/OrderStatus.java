@@ -1,5 +1,5 @@
 package com.warehouse.constant;
 
 public enum OrderStatus {
-	PENDING, PROCESSING, SHIPPED
+	PENDING, PROCESSING, SHIPPED, EXPIRED, CANCELLED, COMPLETED
 }

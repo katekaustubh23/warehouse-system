@@ -15,7 +15,7 @@ import com.warehouse.constant.TableNames;
 import com.warehouse.dao.helper.GenericJdbcRepository;
 import com.warehouse.model.OrderItem;
 import com.warehouse.model.Orders;
-import com.warehouse.service.OrderStatusHandler;
+import com.warehouse.service.handler.OrderStatusHandler;
 import com.warehouse.utility.EntityMapper;
 
 @Repository
