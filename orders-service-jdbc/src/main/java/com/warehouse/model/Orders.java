@@ -6,15 +6,13 @@ import java.util.List;
 import com.warehouse.annotation.Column;
 import com.warehouse.constant.OrderStatus;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Data
 @Getter
 @Setter
 @Builder
+@ToString
 public class Orders {
 
 	private Long id;

@@ -1,9 +1,6 @@
 package com.warehouse.dao.helper;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -42,6 +39,22 @@ public class GenericJdbcRepository {
                 .collect(Collectors.joining(", "));
         return String.format("INSERT INTO %s (%s) VALUES (%s)", tableName, columnSql, placeholderSql);
     }
+
+	// --- COMMON UPDATE SQL BUILDER ---
+	private StringBuilder buildUpdateSQL(String tableName, Map<String, Object> columns) {
+		StringBuilder setClause = new StringBuilder();
+		setClause.append("UPDATE ").append(tableName).append(" SET ");
+		boolean isCommaSeparation = true;
+		for (String fieldName : columns.keySet()) {
+			if(!isCommaSeparation){
+				setClause.append(", ");
+			}
+			setClause.append(fieldName).append(" = :").append(fieldName);
+			isCommaSeparation = false;
+		}
+		setClause.append(" WHERE ");
+		return setClause;
+	}
 
 	 /**
      * Generic method to insert a record into any table dynamically.
@@ -97,4 +110,26 @@ public class GenericJdbcRepository {
             logger.warn(" [{}] Slow operation on {}: {} ms", label, tableName, duration);
         }
     }
+
+	/**
+	 * Generic function to update Order table on multiple field using NamedParameterJdbcTemplate
+	 * @param s table name
+	 * @param mapColumns column name and value to update
+	 * @param id record id to update
+	 * @return number of rows updated
+	 *  */
+	public Optional<Long> updateOrder(String tableName, Map<String, Object> mapColumns, Long id) {
+		long start = System.currentTimeMillis();
+		StringBuilder sql = buildUpdateSQL(tableName, mapColumns);
+		Map<String, Object> params = new HashMap<>(mapColumns);
+		sql.append("id = :id");
+		for (String key : mapColumns.keySet()) {
+			params.put(key, mapColumns.get(key));
+		}
+		params.put("id", id);
+		logger.info("SQL Update query :: " + sql + " update for Id : " + id);
+		int rowsUpdated = namedJdbcTemplate.update(sql.toString(), params);
+		logDuration("Update", tableName, start);
+		return Optional.of(Long.valueOf(rowsUpdated));
+	}
 }

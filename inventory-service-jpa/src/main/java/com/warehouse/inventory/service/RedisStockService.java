@@ -60,12 +60,6 @@ public class RedisStockService {
         }
     }
 
-    public void releaseStock(Long productId,int qty){
-
-        redisTemplate.opsForValue()
-                .increment("stock:product:"+productId,qty);
-    }
-
     /**
      * Implement redis to store reserve quantity and expire time,
      * so that we can release the stock after the expiry time if the order is not completed.
@@ -105,7 +99,7 @@ public class RedisStockService {
                         e -> e.getValue().toString())));
         // WHY: set expiry for reservation (critical for auto-release)
         //step 4: Add expiry to ZSET
-        long expiryTimeMillis = System.currentTimeMillis() + 50000; // 5 min
+        long expiryTimeMillis = System.currentTimeMillis() + 150000; // 15 minutes
 
         // WHY: ZSET = delay queue → avoids DB scanning
         redisTemplate.opsForZSet().add(
@@ -144,6 +138,7 @@ public class RedisStockService {
         }
     }
 
+    @Transactional
     public void confirm(Long orderId) {
 
         List<InventoryReserved> reservations =
@@ -154,13 +149,13 @@ public class RedisStockService {
             if (!"RESERVED".equals(r.getStatus())) continue;
 
             // WHY: final commit to DB (real inventory)
+            inventoryDao.quantityUpdate(r.getProductId().intValue(), -r.getQuantity());
             // inventoryRepo.decrement(...)
 
             r.setStatus("CONFIRMED");
         }
-
-        inventoryDao.batchSaveReserveQuantity(reservations);
-
+        //inventoryDao.batchSaveReserveQuantity(reservations);
+        inventoryDao.updateReservationStatus(orderId, "CONFIRMED");
         // WHY: remove from Redis (no need to rollback anymore)
         redisTemplate.delete("reservation:" + orderId);
 

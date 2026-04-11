@@ -1,5 +1,6 @@
 package com.warehouse.inventory.service;
 
+import com.warehouse.inventory.dto.OrderConfirmEventDto;
 import com.warehouse.inventory.dto.StockReservedEventDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -24,5 +25,15 @@ public class InventoryEventProducer {
     public void sendOrderExpired(StockReservedEventDto event) {
         System.out.println(""+ "Sending order-expired event for orderId: " + event.getOrderId());
         kafkaTemplate.send("order-expired", String.valueOf(event.getOrderId()),event);
+    }
+
+    public void confirmOrderSuccess(OrderConfirmEventDto event) {
+        System.out.println(""+ "Sending order-expired event for orderId: " + event.getOrderId());
+        kafkaTemplate.send("confirm-success", String.valueOf(event.getOrderId()),event);
+    }
+
+    public void confirmOrderFailed(OrderConfirmEventDto event) {
+        System.out.println(""+ "Sending order-expired event for orderId: " + event.getOrderId());
+        kafkaTemplate.send("confirm-failed", String.valueOf(event.getOrderId()),event);
     }
 }

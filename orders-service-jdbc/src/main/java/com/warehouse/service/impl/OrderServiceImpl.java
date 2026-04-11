@@ -101,13 +101,13 @@ public class OrderServiceImpl implements OrderService {
 
 		// make is process
 		order.setStatus(OrderStatus.PROCESSING); // NOT CONFIRMED
-		orderDAO.saveOrder(order);
+		orderDAO.updateOrder(order, orderId);
 		OrderConfirmEventDto orderConfirm = new OrderConfirmEventDto(orderId, status);
 		String payload = objectMapper.writeValueAsString(orderConfirm);
 		outBoxDAO.saveOutBox(new OutBox().builder()
 				.payload(payload)
 				.type("CONFIRM_ORDER")
-				.status(OrderStatus.PROCESSING.name())
+				.status(OrderStatus.NEW.name())
 				.createdAt(LocalDateTime.now())
 				.build());
 		return orderId;
@@ -141,7 +141,7 @@ public class OrderServiceImpl implements OrderService {
         if (statusHandler == null) {
             throw new IllegalArgumentException("No handler found for status: " + status);
         }
-        orderDAO.updateStatus(statusHandler, orderId);
+        orderDAO.updateStatus(statusHandler.getHandledStatus().name(), orderId);
         logger.info("Order {} status updated to {}", orderId, statusHandler.getHandledStatus());
 
 	}

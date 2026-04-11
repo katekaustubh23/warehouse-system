@@ -1,5 +1,8 @@
 package com.warehouse.service;
 
+import com.warehouse.constant.OrderStatus;
+import com.warehouse.dao.OutBoxDAO;
+import com.warehouse.model.OrderConfirmEventDto;
 import com.warehouse.model.StockReservedEventDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +15,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class OrderCosumerService {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final OrderService orderService;
+    private final OutBoxDAO outBoxDAO;
 
     @KafkaListener(topics = {"stock-reserved", "stock-rejected"}, groupId = "orders-group")
         public void consumeInventoryResponse(StockReservedEventDto event) {
@@ -34,7 +37,24 @@ public class OrderCosumerService {
     public void consumeExpiredOrder(StockReservedEventDto event) {
         log.info("Received message from inventory-service order-expired or cancel: " + event.toString());
         // Process the message and update order status accordingly
-        orderService.updateStatus(event.getOrderId(), "EXPIRED");
+        orderService.updateStatus(event.getOrderId(), OrderStatus.EXPIRED.name());
+
+    }
+
+    @KafkaListener(topics = {"confirm-success"}, groupId = "orders-group")
+    public void consumeConfirmSuccess(OrderConfirmEventDto event) {
+        log.info("Received message from inventory-service order-expired or cancel: " + event.toString());
+        // Process the message and update order status accordingly
+        orderService.updateStatus(event.getOrderId(), OrderStatus.CONFIRM_SUCCESS.name());
+        outBoxDAO.updateOutBox(event.getOrderId(), OrderStatus.CONFIRM_SUCCESS.name());
+    }
+
+    @KafkaListener(topics = {"confirm-failed"}, groupId = "orders-group")
+    public void consumeConfirmFailed(OrderConfirmEventDto event) {
+        log.info("Received message from inventory-service order-expired or cancel: " + event.toString());
+        // Process the message and update order status accordingly
+        orderService.updateStatus(event.getOrderId(), OrderStatus.CONFIRM_SUCCESS.name());
+        outBoxDAO.updateOutBox(event.getOrderId(), OrderStatus.CONFIRM_SUCCESS.name());
 
     }
 }

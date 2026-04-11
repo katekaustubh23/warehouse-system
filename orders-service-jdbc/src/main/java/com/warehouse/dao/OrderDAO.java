@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.warehouse.constant.OrderStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -40,6 +41,17 @@ public class OrderDAO {
 		return genericJdbcRepository.insert(
 				TableNames.ORDER_SCHEMA.name().toLowerCase() + "." + TableNames.ORDERS.name().toLowerCase(),
 				mapColumns);
+	}
+
+	/*Generic Updates*/
+	public Optional<Long> updateOrder(Orders order, Long id) {
+		logger.info("update for {} Id : {}",order.getClass().getName(), id);
+		Map<String, Object> mapColumns = EntityMapper.toMap(order); // to maintain order
+		return genericJdbcRepository.updateOrder(
+				TableNames.ORDER_SCHEMA.name().toLowerCase() + "." + TableNames.ORDERS.name().toLowerCase(),
+				mapColumns,
+				id);
+
 	}
 
 	public void saveOrderItems(List<OrderItem> items) {
@@ -100,10 +112,12 @@ public class OrderDAO {
 	 * item.getQuantity()); ps.setInt(4, 1); return ps; }); } }
 	 */
 
-	public void updateStatus(OrderStatusHandler statusHandler, Long orderId) {
-		jdbcTemplate.update("UPDATE warehouse_order.orders SET status = ? WHERE id = ?",
-				statusHandler.getHandledStatus().name(), orderId);
-
+	public void updateStatus(String orderStatus, Long orderId) {
+		jdbcTemplate.update(
+				"UPDATE order_schema.orders SET status = ? WHERE id = ?",
+				orderStatus,
+				orderId
+		);
 	}
 
 }

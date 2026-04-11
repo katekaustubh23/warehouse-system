@@ -31,7 +31,7 @@ public class ReservationExpiryWorker {
 
     private static final String EXPIRY_ZSET = "reservation:expiry";
 
-    @Scheduled(fixedRateString = "PT2M") // every 2 minutes
+    @Scheduled(fixedRateString = "PT15M") // every 15 minutes
     public void processExpiredReservations() {
 
         long now = System.currentTimeMillis();
@@ -64,19 +64,7 @@ public class ReservationExpiryWorker {
 
             // publish event instead of processing directly
             inventoryService.releaseExpiredStock(orderId); // DB + stock rollback
-//            try {
-//                logger.info("Processing expired order {}", orderId);
-//
-//                orderService.expireOrder(orderId); // DB + stock rollback
-//
-//            } catch (Exception ex) {
-//
-//                logger.error("Failed to process order {}", orderId, ex);
-//
-//                // ❗ Reinsert for retry
-//                redisTemplate.opsForZSet()
-//                        .add(EXPIRY_ZSET, orderId, now + 30000); // retry after 30 sec
-//            }
+
         }
     }
 }

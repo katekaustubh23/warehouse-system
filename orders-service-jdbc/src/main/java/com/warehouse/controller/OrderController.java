@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.common.response.ApiResponse;
 import com.common.response.ResponseUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,7 +43,7 @@ public class OrderController {
 	/**Confirm order*/
 	@PutMapping("/confirm")
 	public ResponseEntity<ApiResponse<Long>> confirmOrder(@RequestParam("orderId") Long orderId,
-														  @RequestParam("status") String status) {
+														  @RequestParam("status") String status) throws JsonProcessingException {
 		Long id = orderService.confirmOrder(orderId, status);
 		return responseUtils.buildSuccess(id, MessageString.CREATED_DATA.toString(), HttpStatus.CREATED);
 	}

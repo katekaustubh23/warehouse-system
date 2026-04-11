@@ -1,5 +1,6 @@
 package com.warehouse.inventory.config;
 
+import com.warehouse.inventory.dto.OrderConfirmEventDto;
 import com.warehouse.inventory.dto.OrderCreatedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -19,7 +20,7 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, OrderCreatedEvent> consumerFactory() {
+    public ConsumerFactory<String, OrderConfirmEventDto> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -28,12 +29,12 @@ public class KafkaConsumerConfig {
 
         config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
 
-        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new JsonDeserializer<>(OrderCreatedEvent.class));
+        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new JsonDeserializer<>(OrderConfirmEventDto.class));
     }
 //
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, OrderCreatedEvent> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, OrderCreatedEvent> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, OrderConfirmEventDto> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, OrderConfirmEventDto> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         // you can tune concurrency to match topic partitions

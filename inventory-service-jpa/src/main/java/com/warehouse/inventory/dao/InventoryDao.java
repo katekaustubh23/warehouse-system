@@ -26,4 +26,6 @@ public interface InventoryDao {
     int releasedStock(Long orderId);
 
     void makeReleased(Long orderId);
+
+    void updateReservationStatus(Long orderId, String confirmed);
 }

@@ -30,4 +30,9 @@ public class StockCacheService {
         redisTemplate.opsForValue().set(cacheKey, stockFromDb, 10, TimeUnit.MINUTES);
         return stockFromDb;
     }
+
+    public void removeCache(Long orderId) {
+        // Remove cache for all products in the order
+        redisTemplate.keys("stock:product:*").forEach(redisTemplate::delete);
+    }
 }

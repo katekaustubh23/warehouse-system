@@ -124,7 +124,7 @@ public class InventoryDaoImpl implements InventoryDao{
     @Override
     public void quantityUpdate(int productId, int quantityChange) {
         String sql = """
-                UPDATE inventory
+                UPDATE inventory_schema.inventory
                         SET quantity = quantity + :quantityChange
                         WHERE product_id = :productId
                 """;
@@ -260,6 +260,23 @@ public class InventoryDaoImpl implements InventoryDao{
     """;
 
         jdbcTemplate.update(sql, Map.of("orderId", orderId));
+    }
+
+    @Override
+    public void updateReservationStatus(Long orderId, String confirmed) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("orderId", orderId);
+        params.put("status", confirmed);
+        params.put("updatedAt", LocalDateTime.now());
+        String sql = """
+            UPDATE inventory_schema.reserved_qnty
+            SET status = :status,
+                updated_at = :updatedAt
+            WHERE order_id = :orderId
+              AND status = 'RESERVED';
+        """;
+
+        jdbcTemplate.update(sql, params);
     }
 
 }
