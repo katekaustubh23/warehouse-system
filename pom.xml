@@ -21,7 +21,7 @@
         <module>auth-service-jdbc</module>
         <module>user-service</module>
         <module>orders-service-jdbc</module>
-        <module>inventory-service-jpa</module>
+        <module>inventory-service-jdbc</module>
         <module>warehouse_location</module>
         <module>product-service-jpa</module>
         <module>warehouse-gateway</module>
