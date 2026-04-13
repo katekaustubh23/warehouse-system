@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.warehouse</groupId>
-	<artifactId>orders-service-jpa</artifactId>
+	<artifactId>orders-service-jdbc</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
-	<name>orders-service-jpa</name>
+	<name>orders-service-jdbc</name>
 	<description>Warehouse Orders Microservice with JPA</description>
 
 	<parent>
@@ -114,6 +114,12 @@
 		</dependency>
 
 	</dependencies>
+	<repositories>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/katekaustubh23/Shipment-and-log-lib-warehouse</url>
+		</repository>
+	</repositories>
 
 	<dependencyManagement>
 		<dependencies>

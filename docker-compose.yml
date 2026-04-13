@@ -29,7 +29,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -86,6 +86,8 @@ services:
       - vault
       - auth-service
       - user-service
+      - inventory-service
+      - order-service
     networks:
         - warehouse-network
     extra_hosts:
@@ -106,6 +108,29 @@ services:
       context: .
       dockerfile: user-service/Dockerfile
     container_name: user-service
+    env_file:
+      - .env
+    networks:
+      - warehouse-network
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: inventory-service-jdbc/Dockerfile
+    container_name: inventory-service
+    env_file:
+      - .env
+    networks:
+      - warehouse-network
+
+  order-service:
+    build:
+      context: .
+      dockerfile: orders-service-jdbc/Dockerfile
+      args:
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: order-service
     env_file:
       - .env
     networks:
