@@ -2,6 +2,7 @@ package com.auth.token;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -9,6 +10,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Service
 public class JwtTokenService {
     private final Key key;
@@ -32,7 +34,8 @@ public class JwtTokenService {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("roles", roles)
-                .setExpiration(new Date(System.currentTimeMillis() + Long.valueOf(accessTokenExpiryMs)))
+                .claim("type", "access")
+                .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(accessTokenExpiryMs)))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -46,7 +49,8 @@ public class JwtTokenService {
     public String generateRefreshToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
-                .setExpiration(new Date(System.currentTimeMillis() + Long.valueOf(refreshTokenExpiryMs)))
+                .claim("type", "refresh")
+                .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(refreshTokenExpiryMs)))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -64,6 +68,24 @@ public class JwtTokenService {
      */
     public Jws<Claims> parseToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+    }
+
+    public Claims extractClaims(String token) {
+        return parseToken(token).getBody();
+    }
+
+    public boolean isExpired(String token) {
+        return extractClaims(token).getExpiration().before(new Date());
+    }
+
+    public String getUsername(String token) {
+        return extractClaims(token).getSubject();
+    }
+
+    public boolean isRefreshToken(String token) {
+        Object type = extractClaims(token).get("type");
+        log.info("type claim: {}", type.toString());
+        return "refresh".equals(type);
     }
 
 }
