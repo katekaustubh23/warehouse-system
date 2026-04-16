@@ -17,8 +17,8 @@ import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
-    private String jwtSecret;
-    private long accessTokenExpiryMs;
+    private final String jwtSecret;
+    private final long accessTokenExpiryMs;
 
     public JwtTokenProvider(JwtConfigProperties jwtConfigProperties) {
         this.jwtSecret = jwtConfigProperties.getSecret();
@@ -32,19 +32,6 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    /*Not in use*/
-    public String generateToken(String username) {
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + accessTokenExpiryMs);
-
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(now)
-                .setExpiration(expiry)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -54,11 +41,4 @@ public class JwtTokenProvider {
         }
     }
 
-
-    /*Not in use*/
-    public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody();
-        return claims.getSubject();
-    }
 }

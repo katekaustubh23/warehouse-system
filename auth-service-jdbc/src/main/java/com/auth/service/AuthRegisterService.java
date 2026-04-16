@@ -7,6 +7,7 @@ import com.auth.session.UserRegistration;
 import com.auth.token.JwtConfigProperties;
 import com.auth.token.UrlBaseConfig;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,27 +21,33 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
-public class AuthRegisterService {
+public class AuthRegisterService implements RefreshTokenService{
 
     private final JwtConfigProperties jwtConfigProperties;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private final UrlBaseConfig usUrlBaseConfig;
     private final UserServiceClient userServiceClient;
     private final PasswordEncoder passwordEncoder;
     private final RestTemplate restTemplate;
 
+    private static final String PREFIX = "refresh:";
+
     public AuthRegisterService(JwtConfigProperties jwtConfigProperties,
                                UserServiceClient userServiceClient,
                                PasswordEncoder passwordEncoder,
                                RestTemplate restTemplate,
-                               UrlBaseConfig usUrlBaseConfig) {
+                               UrlBaseConfig usUrlBaseConfig,
+                               RedisTemplate redisTemplate) {
         this.jwtConfigProperties = jwtConfigProperties;
         this.userServiceClient =userServiceClient;
         this.passwordEncoder= passwordEncoder;
         this.restTemplate = restTemplate;
         this.usUrlBaseConfig = usUrlBaseConfig;
+        this.redisTemplate = redisTemplate;
     }
 
     public Map<String, Object> registerFirstUser(String secret, UserRegistration request) {
@@ -93,6 +100,22 @@ public class AuthRegisterService {
         }
 
         // Prepare user DTO to send to user-service
+    }
+
+    @Override
+    public void store(String username, String token, long ttlMillis) {
+        redisTemplate.opsForValue()
+                .set(PREFIX + username, token, ttlMillis, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public String getUsername(String username) {
+        return redisTemplate.opsForValue().get(PREFIX + username);
+    }
+
+    @Override
+    public void delete(String username) {
+        redisTemplate.delete(PREFIX + username);
     }
 
     private void checkPermission(Role requestorRole, Role... allowedRoles) throws AccessDeniedException {

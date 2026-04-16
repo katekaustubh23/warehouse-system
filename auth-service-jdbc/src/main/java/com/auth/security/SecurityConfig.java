@@ -4,6 +4,7 @@ import com.auth.filter.LoginAuthenticationFilter;
 import com.auth.client.UserServiceClient;
 import com.auth.token.JwtTokenService;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,8 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 
+@Slf4j
 @Configuration
-//@EnableWebSecurity
 public class SecurityConfig {
 //
 //    private final UserServiceClient userServiceClient;
@@ -78,25 +79,22 @@ public class SecurityConfig {
 //        return loginJwtFilter;
 //    }
 
-    @Autowired
-    private JwtTokenService jwtTokenService;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    AuthServiceAuthenticationProvider provider,
                                                    AuthenticationManager authManager,
-                                                   JwtTokenService jwtTokenService) throws Exception {
+                                                   LoginAuthenticationFilter loginFilter) throws Exception {
 
-        LoginAuthenticationFilter jwtFilter = new LoginAuthenticationFilter("/v1/auth/login", authManager, jwtTokenService);
-
+        loginFilter.setAuthManager(authManager);
+        log.info("Configuring security filter chain with custom login filter");
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(new AntPathRequestMatcher("/v1/auth/login")).permitAll()
-                        .requestMatchers("/v1/register/**").permitAll()
+                        .requestMatchers("/v1/auth/login").permitAll()
+                        .requestMatchers("/v1/authenticate/**").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(provider)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
     }

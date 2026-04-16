@@ -1,6 +1,7 @@
 package com.auth.filter;
 
-
+import com.auth.service.RefreshTokenService;
+import com.auth.token.JwtConfigProperties;
 import com.auth.token.JwtTokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -19,6 +20,8 @@ import jakarta.servlet.FilterChain;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 
 import java.util.List;
@@ -36,15 +39,24 @@ import java.util.Map;
  * This filter replaces default form login and provides JWT-based authentication.
  */
 
+@Service
 public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
     private static final Logger log = LoggerFactory.getLogger(LoginAuthenticationFilter.class);
 
     private final JwtTokenService jwtTokenService;
-    public LoginAuthenticationFilter(String url, AuthenticationManager manager, JwtTokenService jwtTokenService) {
-        super(new AntPathRequestMatcher(url, "POST"));
+    private final RefreshTokenService refreshTokenService;
+    private final JwtConfigProperties jwtConfigProperties;
+
+    public LoginAuthenticationFilter(AuthenticationManager manager,
+                                     JwtTokenService jwtTokenService,
+                                     RefreshTokenService refreshTokenService,
+                                     JwtConfigProperties jwtConfigProperties) {
+        super(new AntPathRequestMatcher("/v1/auth/login", "POST"));
         setAuthenticationManager(manager);
         this.jwtTokenService = jwtTokenService;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtConfigProperties = jwtConfigProperties;
     }
 
     @Override
@@ -78,7 +90,7 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
 
         String accessToken = jwtTokenService.generateAccessToken(username, roles);
         String refreshToken = jwtTokenService.generateRefreshToken(username);
-
+        refreshTokenService.store(username, refreshToken, Long.parseLong(jwtConfigProperties.getRefreshTokenExpiryMs()));
 //        String token = "GENERATE_JWT_HERE"; // Replace with JwtTokenFactory
         response.setContentType("application/json");
         response.getWriter().write("{\"token\": \"" + accessToken + "\", \"refreshToken\": \"" + refreshToken +"\"}");
@@ -90,5 +102,9 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
                                               AuthenticationException failed) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write("{\"error\": \"Invalid username or password\"}");
+    }
+
+    public void setAuthManager(AuthenticationManager manager) {
+        super.setAuthenticationManager(manager);
     }
 }
