@@ -6,6 +6,7 @@ import com.authlib.service.JwtTokenProvider;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -35,14 +36,14 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        // 2) JWT expected for everything else
-        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // 2) Extract token (cookie first, fallback to header)
+        String token = extractToken(exchange);
+
+        if (token == null) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
 
-        String token = authHeader.substring(7);
         boolean valid;
         try {
             valid = tokenProvider.validateToken(token);
@@ -55,6 +56,26 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
             return exchange.getResponse().setComplete();
         }
 
+        // 2) JWT expected for everything else
+//        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+//            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+//            return exchange.getResponse().setComplete();
+//        }
+
+//        String token = authHeader.substring(7);
+//        boolean valid;
+//        try {
+//            valid = tokenProvider.validateToken(token);
+//        } catch (Exception ex) {
+//            valid = false;
+//        }
+
+//        if (!valid) {
+//            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+//            return exchange.getResponse().setComplete();
+//        }
+
         // 3) Forward with X-Internal-Secret
         ServerHttpRequest mutated = exchange.getRequest().mutate()
                 .header("X-Internal-Secret", internalSecret)
@@ -65,5 +86,28 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         return -1; // run early
+    }
+
+    private String extractToken(ServerWebExchange exchange) {
+
+        // 1. Try cookie
+        HttpCookie cookie = exchange.getRequest()
+                .getCookies()
+                .getFirst("access_token");
+
+        if (cookie != null) {
+            return cookie.getValue();
+        }
+
+        // 2. Fallback to header (optional, for backward compatibility)
+        String authHeader = exchange.getRequest()
+                .getHeaders()
+                .getFirst(HttpHeaders.AUTHORIZATION);
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        return null;
     }
 }

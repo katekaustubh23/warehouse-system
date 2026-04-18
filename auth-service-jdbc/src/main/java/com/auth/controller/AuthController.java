@@ -7,11 +7,16 @@ import com.auth.service.RefreshTokenService;
 import com.auth.session.UserRegistration;
 import com.auth.token.JwtTokenService;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ServerWebExchange;
 
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
@@ -54,48 +59,118 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(
-            @RequestHeader("Authorization") String header) {
+    public ResponseEntity<?> refreshToken(HttpServletRequest request,
+                                          HttpServletResponse response) {
         log.info("Refresh token request received");
         try {
-            String refreshToken = header.substring(7);
-            Claims claims = jwtTokenService.extractClaims(refreshToken);
-            jwtTokenService.isRefreshToken(refreshToken);
-            // 1. validate type
-            if (!jwtTokenService.isRefreshToken(refreshToken)) {
-                return ResponseEntity.status(401).body("Invalid token type");
+//            String refreshToken = header.substring(7);
+//            Claims claims = jwtTokenService.extractClaims(refreshToken);
+//            jwtTokenService.isRefreshToken(refreshToken);
+//            // 1. validate type
+//            if (!jwtTokenService.isRefreshToken(refreshToken)) {
+//                return ResponseEntity.status(401).body("Invalid token type");
+//            }
+//
+//            // 2. expiry
+//            if (jwtTokenService.isExpired(refreshToken)) {
+//                return ResponseEntity.status(401).body("Refresh token expired");
+//            }
+//
+//            String username = jwtTokenService.getUsername(refreshToken);
+//
+//            // 3. validate with Redis
+//            String stored = refreshTokenService.getUsername(username);
+//            if (stored == null || !stored.equals(refreshToken)) {
+//                return ResponseEntity.status(401).body("Invalid refresh token");
+//            }
+//
+//            // 4. reload users (IMPORTANT for roles)
+//
+//            Map<String, Object> user = userServiceClient.getUserByUsername(username, "USER");
+//
+//            if (user == null) {
+//                return ResponseEntity.status(401).body("User not found");
+//            }
+//            String accessToken = jwtTokenService.generateAccessToken(username,
+//                    Collections.singletonList(user.get("role")
+//                            .toString()
+//                            .equals("ADMIN") ? "ADMIN" : "USER"));
+//            String newRefreshToken = jwtTokenService.generateRefreshToken(username);
+//            refreshTokenService.store(username, newRefreshToken, 7 * 24 * 60 * 60 * 1000);
+//            return ResponseEntity.ok(Map.of("accessToken",accessToken,
+//                "refreshToken",refreshToken));
+
+            String refreshToken = extractCookie(request, "refresh_token");
+
+            if (refreshToken == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            // 2. expiry
-            if (jwtTokenService.isExpired(refreshToken)) {
-                return ResponseEntity.status(401).body("Refresh token expired");
-            }
-
+            // validate refresh token
             String username = jwtTokenService.getUsername(refreshToken);
 
-            // 3. validate with Redis
-            String stored = refreshTokenService.getUsername(username);
-            if (stored == null || !stored.equals(refreshToken)) {
-                return ResponseEntity.status(401).body("Invalid refresh token");
-            }
+            // OPTIONAL but recommended: validate against Redis/DB
+            // refreshTokenService.validateStoredToken(username, refreshToken);
 
-            // 4. reload users (IMPORTANT for roles)
+//             4. reload users (IMPORTANT for roles)
 
             Map<String, Object> user = userServiceClient.getUserByUsername(username, "USER");
 
             if (user == null) {
                 return ResponseEntity.status(401).body("User not found");
             }
-            String accessToken = jwtTokenService.generateAccessToken(username,
+
+            String newAccessToken = jwtTokenService.generateAccessToken(username,
                     Collections.singletonList(user.get("role")
                             .toString()
                             .equals("ADMIN") ? "ADMIN" : "USER"));
-            String newRefreshToken = jwtTokenService.generateRefreshToken(username);
-            refreshTokenService.store(username, newRefreshToken, 7 * 24 * 60 * 60 * 1000);
-            return ResponseEntity.ok(Map.of("accessToken",accessToken,
-                "refreshToken",refreshToken));
+
+            ResponseCookie newAccessCookie = ResponseCookie.from("access_token", newAccessToken)
+                    .httpOnly(true) // Prevents JavaScript access to the cookie, mitigating XSS risks
+                    .secure(false)
+                    .path("/")
+                    .maxAge(Duration.ofMinutes(15))
+                    .sameSite("Lax") // Allows the cookie to be sent with top-level navigations and same-site requests, but not with cross-site requests, providing a balance between security and usability
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, newAccessCookie.toString());
+
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @PostMapping("/auth/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+
+        ResponseCookie clearAccess = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie clearRefresh = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/auth/refresh")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, clearAccess.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, clearRefresh.toString());
+
+        return ResponseEntity.ok().build();
+    }
+
+    private String extractCookie(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) return null;
+
+        return Arrays.stream(request.getCookies())
+                .filter(c -> c.getName().equals(name))
+                .findFirst()
+                .map(Cookie::getValue)
+                .orElse(null);
     }
 }
