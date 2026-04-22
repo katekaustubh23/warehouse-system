@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserResponseWithPassword getUserByUsername(String username, Role role) {
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findByEmailOrUsername(username).orElseThrow(() -> new UserNotFoundException("User not found"));
         return UserResponseWithPassword.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
