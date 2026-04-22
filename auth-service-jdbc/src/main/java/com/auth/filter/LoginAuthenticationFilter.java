@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -90,10 +93,37 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
 
         String accessToken = jwtTokenService.generateAccessToken(username, roles);
         String refreshToken = jwtTokenService.generateRefreshToken(username);
+
+        // access token cookie (short-lived)
+        ResponseCookie tokenCookie = ResponseCookie.from("access_token", accessToken)
+                .httpOnly(true) // Prevents JavaScript access to the cookie, mitigating XSS risks
+                .secure(true)// Ensures the cookie is only sent over HTTPS, enhancing security in production
+                .path("/")// Makes the cookie available to the entire application
+                .maxAge(Long.parseLong(jwtConfigProperties.getAccessTokenExpiryMs()) / 1000) // Sets the cookie's lifespan to match the access token's expiration time
+                .sameSite("Strict") // Prevents the cookie from being sent with cross-site requests, mitigating CSRF risks
+                .build();
+
+        // refresh token cookie (long-lived)
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/v1/authenticate/refresh") // Restricts the refresh token cookie to the refresh endpoint, reducing exposure
+                .maxAge(Long.parseLong(jwtConfigProperties.getRefreshTokenExpiryMs()) / 1000)
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
         refreshTokenService.store(username, refreshToken, Long.parseLong(jwtConfigProperties.getRefreshTokenExpiryMs()));
-//        String token = "GENERATE_JWT_HERE"; // Replace with JwtTokenFactory
-        response.setContentType("application/json");
-        response.getWriter().write("{\"token\": \"" + accessToken + "\", \"refreshToken\": \"" + refreshToken +"\"}");
+        // No need to send tokens in body anymore
+        response.setStatus(HttpStatus.OK.value());
+
+
+        //        response as JSON with tokens (optional, since we're using cookies)
+        //        String token = "GENERATE_JWT_HERE"; // Replace with JwtTokenFactory
+        //        response.setContentType("application/json");
+        //        response.getWriter().write("{\"token\": \"" + accessToken + "\", \"refreshToken\": \"" + refreshToken +"\"}");
     }
 
     @Override
