@@ -1,9 +1,11 @@
 package com.auth.security;
 
+import com.auth.config.PropertiesConfig;
 import com.auth.filter.LoginAuthenticationFilter;
 import com.auth.client.UserServiceClient;
 import com.auth.token.JwtTokenService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +19,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -27,62 +31,10 @@ import java.util.List;
 
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
-//
-//    private final UserServiceClient userServiceClient;
-//    private final JwtTokenService jwtTokenService;
-//
-//    @Autowired
-//    public SecurityConfig(UserServiceClient userServiceClient, JwtTokenService jwtTokenService) {
-//        this.userServiceClient = userServiceClient;
-//        this.jwtTokenService = jwtTokenService;
-//    }
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-//
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(
-//            HttpSecurity httpSecurity)
-//            throws Exception {
-//
-//
-////        return httpSecurity.csrf(csrf -> csrf.disable())
-////                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-////                .and()
-////                .authorizeHttpRequests(auth -> auth
-////                        .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/login")).permitAll()
-////                        .anyRequest().authenticated())
-////                .formLogin(form -> form.disable()) // disable default login form
-////                .httpBasic(httpBasic -> httpBasic.disable()) // disable basic auth
-////                .addFilterBefore(loginJwtFilter, UsernamePasswordAuthenticationFilter.class)
-////                .build();
-//        return httpSecurity
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/login")).permitAll()
-//                        .anyRequest().authenticated())
-//                .sessionManagement(session -> session
-//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .addFilterBefore(customLoginFilter(httpSecurity.getSharedObject(AuthenticationManager.class)),
-//                        UsernamePasswordAuthenticationFilter.class)
-//                .build();
-//    }
-//
-////    @Bean
-////    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-////        return http.getSharedObject(AuthenticationManagerBuilder.class).build();
-////    }
-//
-//    @Bean
-//    public LoginAuthenticationFilter customLoginFilter(AuthenticationManager authManager) {
-//        LoginAuthenticationFilter loginJwtFilter = new LoginAuthenticationFilter("/api/v1/auth/login", jwtTokenService, userServiceClient, passwordEncoder());
-////        loginJwtFilter.setAuthenticationManager(httpSecurity.getSharedObject(AuthenticationManager.class));
-//
-//        loginJwtFilter.setAuthenticationManager(authManager);
-//        return loginJwtFilter;
-//    }
+
+    private final PropertiesConfig prop;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -93,7 +45,10 @@ public class SecurityConfig {
         loginFilter.setAuthManager(authManager);
         log.info("Configuring security filter chain with custom login filter");
         return http
-                .csrf(csrf -> csrf.disable())
+//                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/v1/auth/login", "/v1/authenticate/**") // disable CSRF for login endpoint
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())) // use cookies for CSRF tokens, allowing JavaScript to read them if needed
                 .cors(cors -> {}) // use default CORS configuration from corsConfigurationSource bean
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v1/auth/login").permitAll()
@@ -117,7 +72,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200")); // frontend URL
+        config.setAllowedOrigins(prop.getCors().getAllowedOrigins()); // frontend URL
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // 🔥 REQUIRED for cookies

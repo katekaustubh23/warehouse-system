@@ -1,5 +1,6 @@
 package com.auth.filter;
 
+import com.auth.config.PropertiesConfig;
 import com.auth.service.RefreshTokenService;
 import com.auth.token.JwtConfigProperties;
 import com.auth.token.JwtTokenService;
@@ -50,16 +51,19 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
     private final JwtTokenService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
     private final JwtConfigProperties jwtConfigProperties;
+    private final PropertiesConfig props;
 
     public LoginAuthenticationFilter(AuthenticationManager manager,
                                      JwtTokenService jwtTokenService,
                                      RefreshTokenService refreshTokenService,
-                                     JwtConfigProperties jwtConfigProperties) {
+                                     JwtConfigProperties jwtConfigProperties,
+                                     PropertiesConfig props) {
         super(new AntPathRequestMatcher("/v1/auth/login", "POST"));
         setAuthenticationManager(manager);
         this.jwtTokenService = jwtTokenService;
         this.refreshTokenService = refreshTokenService;
         this.jwtConfigProperties = jwtConfigProperties;
+        this.props=props;
     }
 
     @Override
@@ -97,7 +101,7 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
         // access token cookie (short-lived)
         ResponseCookie tokenCookie = ResponseCookie.from("access_token", accessToken)
                 .httpOnly(true) // Prevents JavaScript access to the cookie, mitigating XSS risks
-                .secure(true)// Ensures the cookie is only sent over HTTPS, enhancing security in production
+                .secure(false)// Ensures the cookie is only sent over HTTPS, enhancing security in production
                 .path("/")// Makes the cookie available to the entire application
                 .maxAge(Long.parseLong(jwtConfigProperties.getAccessTokenExpiryMs()) / 1000) // Sets the cookie's lifespan to match the access token's expiration time
                 .sameSite("Strict") // Prevents the cookie from being sent with cross-site requests, mitigating CSRF risks
@@ -106,7 +110,7 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
         // refresh token cookie (long-lived)
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/v1/authenticate/refresh") // Restricts the refresh token cookie to the refresh endpoint, reducing exposure
                 .maxAge(Long.parseLong(jwtConfigProperties.getRefreshTokenExpiryMs()) / 1000)
                 .sameSite("Strict")
