@@ -104,7 +104,7 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
                 .secure(false)// Ensures the cookie is only sent over HTTPS, enhancing security in production
                 .path("/")// Makes the cookie available to the entire application
                 .maxAge(Long.parseLong(jwtConfigProperties.getAccessTokenExpiryMs()) / 1000) // Sets the cookie's lifespan to match the access token's expiration time
-                .sameSite("Strict") // Prevents the cookie from being sent with cross-site requests, mitigating CSRF risks
+                .sameSite("Lax") // Prevents the cookie from being sent with cross-site requests, mitigating CSRF risks
                 .build();
 
         // refresh token cookie (long-lived)
@@ -113,7 +113,7 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
                 .secure(false)
                 .path("/v1/authenticate/refresh") // Restricts the refresh token cookie to the refresh endpoint, reducing exposure
                 .maxAge(Long.parseLong(jwtConfigProperties.getRefreshTokenExpiryMs()) / 1000)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie.toString());

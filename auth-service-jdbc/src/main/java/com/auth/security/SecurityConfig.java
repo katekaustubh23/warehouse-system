@@ -45,11 +45,11 @@ public class SecurityConfig {
         loginFilter.setAuthManager(authManager);
         log.info("Configuring security filter chain with custom login filter");
         return http
-//                .csrf(csrf -> csrf.disable())
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/v1/auth/login", "/v1/authenticate/**") // disable CSRF for login endpoint
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())) // use cookies for CSRF tokens, allowing JavaScript to read them if needed
-                .cors(cors -> {}) // use default CORS configuration from corsConfigurationSource bean
+                .csrf(csrf -> csrf.disable())
+//                .csrf(csrf -> csrf
+//                        .ignoringRequestMatchers("/v1/auth/login", "/v1/authenticate/**") // disable CSRF for login endpoint
+//                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())) // use cookies for CSRF tokens, allowing JavaScript to read them if needed
+//                .cors(cors -> {}) // use default CORS configuration from corsConfigurationSource bean
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v1/auth/login").permitAll()
                         .requestMatchers("/v1/authenticate/**").permitAll()
@@ -68,18 +68,4 @@ public class SecurityConfig {
                 .build();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(prop.getCors().getAllowedOrigins()); // frontend URL
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true); // 🔥 REQUIRED for cookies
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        return source;
-    }
 }
