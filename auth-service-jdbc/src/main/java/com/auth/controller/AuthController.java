@@ -63,42 +63,6 @@ public class AuthController {
                                           HttpServletResponse response) {
         log.info("Refresh token request received");
         try {
-//            String refreshToken = header.substring(7);
-//            Claims claims = jwtTokenService.extractClaims(refreshToken);
-//            jwtTokenService.isRefreshToken(refreshToken);
-//            // 1. validate type
-//            if (!jwtTokenService.isRefreshToken(refreshToken)) {
-//                return ResponseEntity.status(401).body("Invalid token type");
-//            }
-//
-//            // 2. expiry
-//            if (jwtTokenService.isExpired(refreshToken)) {
-//                return ResponseEntity.status(401).body("Refresh token expired");
-//            }
-//
-//            String username = jwtTokenService.getUsername(refreshToken);
-//
-//            // 3. validate with Redis
-//            String stored = refreshTokenService.getUsername(username);
-//            if (stored == null || !stored.equals(refreshToken)) {
-//                return ResponseEntity.status(401).body("Invalid refresh token");
-//            }
-//
-//            // 4. reload users (IMPORTANT for roles)
-//
-//            Map<String, Object> user = userServiceClient.getUserByUsername(username, "USER");
-//
-//            if (user == null) {
-//                return ResponseEntity.status(401).body("User not found");
-//            }
-//            String accessToken = jwtTokenService.generateAccessToken(username,
-//                    Collections.singletonList(user.get("role")
-//                            .toString()
-//                            .equals("ADMIN") ? "ADMIN" : "USER"));
-//            String newRefreshToken = jwtTokenService.generateRefreshToken(username);
-//            refreshTokenService.store(username, newRefreshToken, 7 * 24 * 60 * 60 * 1000);
-//            return ResponseEntity.ok(Map.of("accessToken",accessToken,
-//                "refreshToken",refreshToken));
 
             String refreshToken = extractCookie(request, "refresh_token");
 
@@ -172,5 +136,21 @@ public class AuthController {
                 .findFirst()
                 .map(Cookie::getValue)
                 .orElse(null);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+
+        String token = extractCookie(request, "access_token");
+
+        if (token == null || !jwtTokenService.isValidAccessToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String username = jwtTokenService.getUsername(token);
+
+        return ResponseEntity.ok(Map.of(
+                "username", username
+        ));
     }
 }
