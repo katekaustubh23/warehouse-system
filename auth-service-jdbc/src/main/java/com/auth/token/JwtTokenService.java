@@ -88,4 +88,31 @@ public class JwtTokenService {
         return "refresh".equals(type);
     }
 
+    public boolean isValidAccessToken(String token) {
+        try {
+            Claims claims = extractClaims(token);
+
+            // 1. check type
+            String type = claims.get("type", String.class);
+            if (!"access".equals(type)) {
+                return false;
+            }
+
+            // 2. check expiration
+            return !isExpired(token);
+
+        } catch (ExpiredJwtException e) {
+            log.warn("Token expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            log.warn("Unsupported token: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.warn("Malformed token: {}", e.getMessage());
+        } catch (SignatureException e) {
+            log.warn("Invalid signature: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.warn("Token is empty or null: {}", e.getMessage());
+        }
+
+        return false;
+    }
 }

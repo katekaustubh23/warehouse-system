@@ -24,7 +24,7 @@ spring:
           predicates:
             - Path=/orders/**
           filters:
-            - StripPrefix=0
+            - StripPrefix=1
 
         - id: user-service
           uri: http://localhost:8087
@@ -38,7 +38,7 @@ spring:
           predicates:
             - Path=/inventory/**
           filters:
-            - StripPrefix=0
+            - StripPrefix=1
 
 
 management:

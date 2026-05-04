@@ -111,7 +111,7 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .secure(false)
-                .path("/v1/authenticate/refresh") // Restricts the refresh token cookie to the refresh endpoint, reducing exposure
+                .path("/") // Restricts the refresh token cookie to the refresh endpoint, reducing exposure
                 .maxAge(Long.parseLong(jwtConfigProperties.getRefreshTokenExpiryMs()) / 1000)
                 .sameSite("Lax")
                 .build();
