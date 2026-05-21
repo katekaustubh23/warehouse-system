@@ -56,24 +56,10 @@ public class JwtAuthenticationGatewayFilter implements GlobalFilter, Ordered {
             return exchange.getResponse().setComplete();
         }
 
-        // 2) JWT expected for everything else
-//        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-//            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-//            return exchange.getResponse().setComplete();
-//        }
-
-//        String token = authHeader.substring(7);
-//        boolean valid;
-//        try {
-//            valid = tokenProvider.validateToken(token);
-//        } catch (Exception ex) {
-//            valid = false;
-//        }
-
-//        if (!valid) {
-//            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-//            return exchange.getResponse().setComplete();
+        // validate request coming from same network, if it's from loopback address, we can skip the internal secret check for testing purposes
+//        if(exchange.getRequest().getRemoteAddress().getAddress().isLoopbackAddress()){
+//            // Allow localhost requests without internal secret for testing
+//            return chain.filter(exchange);
 //        }
 
         // 3) Forward with X-Internal-Secret
