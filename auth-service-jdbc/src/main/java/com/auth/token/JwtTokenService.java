@@ -56,6 +56,22 @@ public class JwtTokenService {
     }
 
     /**
+     * Generates a JWT token for chat access for the specified user.
+     *
+     * @param username the username for which the chat access token is generated
+     * @return a JWT token string for chat access
+     */
+    public String generateUserChatToken(String username, boolean isActive){
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("type", "chat_access")
+                .claim("isActive", isActive)
+                .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(accessTokenExpiryMs)))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
      * Parses a JWT token string and returns a {@link Jws} object containing the payload.
      * <p>
      * You can use this method to verify the signature of a JWT token and extract the payload.

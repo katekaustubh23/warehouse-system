@@ -97,6 +97,7 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
 
         String accessToken = jwtTokenService.generateAccessToken(username, roles);
         String refreshToken = jwtTokenService.generateRefreshToken(username);
+        String chatToken = jwtTokenService.generateUserChatToken(username, true);
 
         // access token cookie (short-lived)
         ResponseCookie tokenCookie = ResponseCookie.from("access_token", accessToken)
@@ -116,9 +117,21 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
                 .sameSite("Lax")
                 .build();
 
+        // refresh token cookie (long-lived)
+        ResponseCookie chatCookies = ResponseCookie.from("chat_token", chatToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/") // Restrict the chat token cookie to the chat endpoint, reducing exposure
+                .maxAge(Long.parseLong(jwtConfigProperties.getAccessTokenExpiryMs()) / 1000)
+                .sameSite("Lax")
+                .build();
+
         response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, chatCookies.toString());
 
+        // store refresh token into redis :
+        // TODO : will remove
         refreshTokenService.store(username, refreshToken, Long.parseLong(jwtConfigProperties.getRefreshTokenExpiryMs()));
         // No need to send tokens in body anymore
         response.setStatus(HttpStatus.OK.value());
